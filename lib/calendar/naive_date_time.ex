@@ -52,19 +52,31 @@ defmodule Calendar.NaiveDateTime do
       {:error, :invalid_datetime}
   """
   def from_erl(dt, microsecond \\ {0, 0})
-  def from_erl({{year, month, day}, {hour, min, sec}}, microsecond) when is_integer(microsecond) do
+
+  def from_erl({{year, month, day}, {hour, min, sec}}, microsecond)
+      when is_integer(microsecond) do
     from_erl({{year, month, day}, {hour, min, sec}}, {microsecond, 6})
   end
+
   def from_erl({{year, month, day}, {hour, min, sec}}, microsecond) do
-    if validate_erl_datetime {{year, month, day}, {hour, min, sec}} do
-      {:ok, %NaiveDateTime{year: year, month: month, day: day, hour: hour, minute: min, second: sec, microsecond: microsecond}}
+    if validate_erl_datetime({{year, month, day}, {hour, min, sec}}) do
+      {:ok,
+       %NaiveDateTime{
+         year: year,
+         month: month,
+         day: day,
+         hour: hour,
+         minute: min,
+         second: sec,
+         microsecond: microsecond
+       }}
     else
       {:error, :invalid_datetime}
     end
   end
 
   defp validate_erl_datetime({date, time}) do
-    {time_tag, _ } = Calendar.Time.from_erl(time)
+    {time_tag, _} = Calendar.Time.from_erl(time)
     :calendar.valid_date(date) && time_tag == :ok
   end
 
@@ -76,9 +88,17 @@ defmodule Calendar.NaiveDateTime do
       iex> from_erl!({{2014, 10, 15}, {2, 37, 22}}) |> to_erl
       {{2014, 10, 15}, {2, 37, 22}}
   """
-  def to_erl(%NaiveDateTime{year: year, month: month, day: day, hour: hour, minute: min, second: sec}) do
+  def to_erl(%NaiveDateTime{
+        year: year,
+        month: month,
+        day: day,
+        hour: hour,
+        minute: min,
+        second: sec
+      }) do
     {{year, month, day}, {hour, min, sec}}
   end
+
   def to_erl(ndt) do
     ndt |> contained_ndt |> to_erl
   end
@@ -98,12 +118,30 @@ defmodule Calendar.NaiveDateTime do
       iex> from_erl!({{2014,10,15},{2,37,22}}, {0, 0}) |> Calendar.NaiveDateTime.to_micro_erl
       {{2014, 10, 15}, {2, 37, 22, 0}}
   """
-  def to_micro_erl(%NaiveDateTime{year: year, month: month, day: day, hour: hour, minute: min, second: sec, microsecond: {0, _}}) do
+  def to_micro_erl(%NaiveDateTime{
+        year: year,
+        month: month,
+        day: day,
+        hour: hour,
+        minute: min,
+        second: sec,
+        microsecond: {0, _}
+      }) do
     {{year, month, day}, {hour, min, sec, 0}}
   end
-  def to_micro_erl(%NaiveDateTime{year: year, month: month, day: day, hour: hour, minute: min, second: sec, microsecond: {microsecond, _}}) do
+
+  def to_micro_erl(%NaiveDateTime{
+        year: year,
+        month: month,
+        day: day,
+        hour: hour,
+        minute: min,
+        second: sec,
+        microsecond: {microsecond, _}
+      }) do
     {{year, month, day}, {hour, min, sec, microsecond}}
   end
+
   def to_micro_erl(ndt) do
     ndt |> contained_ndt |> to_micro_erl
   end
@@ -172,7 +210,11 @@ defmodule Calendar.NaiveDateTime do
   """
   def from_date_and_time(date_container, time_container) do
     contained_time = Calendar.ContainsTime.time_struct(time_container)
-    from_erl({Calendar.Date.to_erl(date_container), Calendar.Time.to_erl(contained_time)}, contained_time.microsecond)
+
+    from_erl(
+      {Calendar.Date.to_erl(date_container), Calendar.Time.to_erl(contained_time)},
+      contained_time.microsecond
+    )
   end
 
   @doc """
@@ -204,7 +246,8 @@ defmodule Calendar.NaiveDateTime do
   """
   def with_offset_to_datetime_utc(ndt, total_utc_offset) do
     ndt = ndt |> contained_ndt
-    {tag, advanced_ndt} = ndt |> advance(total_utc_offset*-1)
+    {tag, advanced_ndt} = ndt |> advance(total_utc_offset * -1)
+
     case tag do
       :ok -> to_date_time(advanced_ndt, "Etc/UTC")
       _ -> {:error, nil}
@@ -226,7 +269,7 @@ defmodule Calendar.NaiveDateTime do
             second: 12, microsecond: {123456, 6},
             year: 2014}}
   """
-  def add(ndt, seconds),  do: advance(ndt, seconds)
+  def add(ndt, seconds), do: advance(ndt, seconds)
 
   @doc """
   Like `add` without exclamation points.
@@ -244,7 +287,7 @@ defmodule Calendar.NaiveDateTime do
   """
   def add!(ndt, seconds), do: advance!(ndt, seconds)
 
-  def subtract(ndt, seconds),  do: add(ndt, -1 * seconds)
+  def subtract(ndt, seconds), do: add(ndt, -1 * seconds)
   def subtract!(ndt, seconds), do: add!(ndt, -1 * seconds)
 
   @doc """
@@ -254,12 +297,15 @@ defmodule Calendar.NaiveDateTime do
     try do
       ndt = ndt |> contained_ndt
       greg_secs = ndt |> gregorian_seconds
-      advanced = greg_secs + seconds
-      |>from_gregorian_seconds!(ndt.microsecond)
+
+      advanced =
+        (greg_secs + seconds)
+        |> from_gregorian_seconds!(ndt.microsecond)
+
       {:ok, advanced}
     rescue
       FunctionClauseError ->
-      {:error, :function_clause_error}
+        {:error, :function_clause_error}
     end
   end
 
@@ -285,7 +331,7 @@ defmodule Calendar.NaiveDateTime do
     ndt
     |> contained_ndt
     |> to_erl
-    |> :calendar.datetime_to_gregorian_seconds
+    |> :calendar.datetime_to_gregorian_seconds()
   end
 
   @doc """
@@ -317,10 +363,11 @@ defmodule Calendar.NaiveDateTime do
       {:ok, 0, 0, :same_time}
   """
   def diff(%NaiveDateTime{} = first_dt, %NaiveDateTime{} = second_dt) do
-    first_dt_utc  = first_dt  |> to_date_time_utc
+    first_dt_utc = first_dt |> to_date_time_utc
     second_dt_utc = second_dt |> to_date_time_utc
     Calendar.DateTime.diff(first_dt_utc, second_dt_utc)
   end
+
   def diff(ndt1, ndt2) do
     diff(contained_ndt(ndt1), contained_ndt(ndt2))
   end
@@ -362,6 +409,7 @@ defmodule Calendar.NaiveDateTime do
     {_, _, _, comparison} = diff(ndt1, ndt2)
     comparison == :before
   end
+
   @doc """
   Takes a two `NaiveDateTime`s and returns true if the first
   is equal to the second one.
@@ -384,8 +432,8 @@ defmodule Calendar.NaiveDateTime do
 
   defp from_gregorian_seconds!(gregorian_seconds, microsecond) do
     gregorian_seconds
-    |>:calendar.gregorian_seconds_to_datetime
-    |>from_erl!(microsecond)
+    |> :calendar.gregorian_seconds_to_datetime()
+    |> from_erl!(microsecond)
   end
 
   defp contained_ndt(ndt_container) do
@@ -398,21 +446,32 @@ defimpl Calendar.ContainsNaiveDateTime, for: NaiveDateTime do
 end
 
 defimpl Calendar.ContainsNaiveDateTime, for: Calendar.DateTime do
-  def ndt_struct(data), do: data |> Calendar.DateTime.to_naive
+  def ndt_struct(data), do: data |> Calendar.DateTime.to_naive()
 end
 
 defimpl Calendar.ContainsNaiveDateTime, for: Tuple do
   def ndt_struct({{year, month, day}, {hour, min, sec}}) do
     NaiveDateTime.from_erl!({{year, month, day}, {hour, min, sec}})
   end
+
   def ndt_struct({{year, month, day}, {hour, min, sec, microsecond}}) do
     Calendar.NaiveDateTime.from_erl!({{year, month, day}, {hour, min, sec}}, microsecond)
   end
 end
 
 defimpl Calendar.ContainsNaiveDateTime, for: DateTime do
-  def ndt_struct(%{calendar: Calendar.ISO}=data), do: %NaiveDateTime{day: data.day, month: data.month, year: data.year, hour: data.hour, minute: data.minute, second: data.second, microsecond: data.microsecond}
+  def ndt_struct(%{calendar: Calendar.ISO} = data),
+    do: %NaiveDateTime{
+      day: data.day,
+      month: data.month,
+      year: data.year,
+      hour: data.hour,
+      minute: data.minute,
+      second: data.second,
+      microsecond: data.microsecond
+    }
 end
-#defimpl Calendar.ContainsNaiveDateTime, for: NaiveDateTime do
+
+# defimpl Calendar.ContainsNaiveDateTime, for: NaiveDateTime do
 #  def ndt_struct(%{calendar: Calendar.ISO}=data), do: %NaiveDateTime{day: data.day, month: data.month, year: data.year, hour: data.hour, minute: data.minute, second: data.second, microsecond: data.microsecond}
-#end
+# end

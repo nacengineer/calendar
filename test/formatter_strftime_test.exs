@@ -13,7 +13,7 @@ defmodule FormatterStrfTimeTest do
   end
 
   test "strftime" do
-    dt = Calendar.DateTime.from_erl!({{2014, 11, 3}, {1, 41, 2}}, "UTC", 123456)
+    dt = Calendar.DateTime.from_erl!({{2014, 11, 3}, {1, 41, 2}}, "UTC", 123_456)
     dt_sunday = Calendar.DateTime.from_erl!({{2014, 11, 2}, {1, 41, 2}}, "UTC")
     assert Strftime.strftime!(dt, "%a") == "Mon"
     assert Strftime.strftime!(dt, "%A") == "Monday"

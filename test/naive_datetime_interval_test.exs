@@ -8,6 +8,7 @@ defmodule Calendar.NaiveDateTime.IntervalTest do
       from: Calendar.NaiveDateTime.from_erl!({{2015, 1, 1}, {12, 0, 0}}),
       to: Calendar.NaiveDateTime.from_erl!({{2015, 1, 2}, {12, 0, 0}})
     }
+
     {:ok, interval: interval}
   end
 end

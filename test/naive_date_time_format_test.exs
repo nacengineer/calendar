@@ -4,4 +4,3 @@ defmodule NaiveDateTimeFormatTest do
   import Format
   doctest Format
 end
-

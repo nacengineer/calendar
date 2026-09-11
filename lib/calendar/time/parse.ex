@@ -19,6 +19,7 @@ defmodule Calendar.Time.Parse do
   """
   def iso8601(string) do
     captured = string |> capture_iso8601_string
+
     if captured do
       Calendar.Time.from_erl(erl_time_from_regex_map(captured))
     else
@@ -52,7 +53,7 @@ defmodule Calendar.Time.Parse do
     erl_date_time_from_strings({mapped["hour"], mapped["min"], mapped["sec"]})
   end
 
-   defp erl_date_time_from_strings({hour, min, sec}) do
+  defp erl_date_time_from_strings({hour, min, sec}) do
     {hour |> to_int, min |> to_int, sec |> to_int}
   end
 end

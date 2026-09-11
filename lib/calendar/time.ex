@@ -24,6 +24,7 @@ defmodule Calendar.Time do
   def to_erl(%Time{hour: hour, minute: minute, second: second}) do
     {hour, minute, second}
   end
+
   def to_erl(t), do: t |> contained_time |> to_erl
 
   @doc """
@@ -44,6 +45,7 @@ defmodule Calendar.Time do
   def to_micro_erl(%Time{hour: hour, minute: min, second: sec, microsecond: {usec, _}}) do
     {hour, min, sec, usec}
   end
+
   def to_micro_erl(t), do: t |> contained_time |> to_micro_erl
 
   @doc """
@@ -71,9 +73,11 @@ defmodule Calendar.Time do
       {:error, :invalid_time}
   """
   def from_erl(_hour_minute_second_tuple, _microsecond \\ {0, 0})
+
   def from_erl({hour, minute, second}, microsecond) when is_integer(microsecond) do
     from_erl({hour, minute, second}, {microsecond, 6})
   end
+
   def from_erl({hour, minute, second}, microsecond) do
     case valid_time({hour, minute, second}, microsecond) do
       true -> {:ok, %Time{hour: hour, minute: minute, second: second, microsecond: microsecond}}
@@ -96,10 +100,12 @@ defmodule Calendar.Time do
   end
 
   defp valid_time(time, {microsecond, precision}) do
-    valid_time(time) && precision >= 0 && precision <= 6 && (microsecond >= 0 && microsecond < 1_000_000)
+    valid_time(time) && precision >= 0 && precision <= 6 &&
+      (microsecond >= 0 && microsecond < 1_000_000)
   end
+
   defp valid_time({hour, minute, second}) do
-    hour >=0 and hour <= 23 and minute >= 0 and minute < 60 and second >=0 and second <= 60
+    hour >= 0 and hour <= 23 and minute >= 0 and minute < 60 and second >= 0 and second <= 60
   end
 
   @doc """
@@ -136,7 +142,7 @@ defmodule Calendar.Time do
     time
     |> contained_time
     |> to_erl
-    |> :calendar.time_to_seconds
+    |> :calendar.time_to_seconds()
   end
 
   @doc """
@@ -156,8 +162,10 @@ defmodule Calendar.Time do
       %Time{hour: 23, minute: 59, second: 59, microsecond: {0, 0}}
   """
   def from_second_in_day(second) when second >= 0 and second <= 86399 do
-    {h, m, s} = second
-    |> :calendar.seconds_to_time
+    {h, m, s} =
+      second
+      |> :calendar.seconds_to_time()
+
     %Time{hour: h, minute: m, second: s, microsecond: {0, 0}}
   end
 
@@ -179,9 +187,12 @@ defmodule Calendar.Time do
       %Time{hour: 0, minute: 0, second: 0, microsecond: {300000, 6}}
   """
   def next_second(time), do: time |> contained_time |> do_next_second
-  defp do_next_second(%Time{hour: 23, minute: 59, second: second, microsecond: microsecond}) when second >= 59 do
+
+  defp do_next_second(%Time{hour: 23, minute: 59, second: second, microsecond: microsecond})
+       when second >= 59 do
     %Time{hour: 0, minute: 0, second: 0, microsecond: microsecond}
   end
+
   defp do_next_second(time) do
     time
     |> second_in_day
@@ -189,7 +200,9 @@ defmodule Calendar.Time do
     |> from_second_in_day
     |> add_usec_to_time(time.microsecond)
   end
+
   defp add_usec_to_time(time, nil), do: time
+
   defp add_usec_to_time(time, microsecond) do
     %{time | :microsecond => microsecond}
   end
@@ -212,9 +225,11 @@ defmodule Calendar.Time do
       %Time{hour: 23, minute: 59, second: 59, microsecond: {200_000, 6}}
   """
   def prev_second(time), do: time |> contained_time |> do_prev_second
+
   defp do_prev_second(%Time{hour: 0, minute: 0, second: 0, microsecond: microsecond}) do
     %Time{hour: 23, minute: 59, second: 59, microsecond: microsecond}
   end
+
   defp do_prev_second(time) do
     time
     |> second_in_day
@@ -223,10 +238,21 @@ defmodule Calendar.Time do
     |> add_usec_to_time(time.microsecond)
   end
 
-  defp x24h_to_12_h(0) do {12, :am} end
-  defp x24h_to_12_h(12) do {12, :pm} end
-  defp x24h_to_12_h(hour) when hour >= 1 and hour < 12 do {hour, :am} end
-  defp x24h_to_12_h(hour) when hour > 12 do {hour - 12, :pm} end
+  defp x24h_to_12_h(0) do
+    {12, :am}
+  end
+
+  defp x24h_to_12_h(12) do
+    {12, :pm}
+  end
+
+  defp x24h_to_12_h(hour) when hour >= 1 and hour < 12 do
+    {hour, :am}
+  end
+
+  defp x24h_to_12_h(hour) when hour > 12 do
+    {hour - 12, :pm}
+  end
 
   @doc """
   Difference in seconds between two times.
@@ -283,31 +309,51 @@ end
 defimpl Calendar.ContainsTime, for: Time do
   def time_struct(data), do: data
 end
+
 defimpl Calendar.ContainsTime, for: DateTime do
   def time_struct(data) do
-    %Time{hour: data.hour, minute: data.minute, second: data.second, microsecond: data.microsecond}
+    %Time{
+      hour: data.hour,
+      minute: data.minute,
+      second: data.second,
+      microsecond: data.microsecond
+    }
   end
 end
+
 defimpl Calendar.ContainsTime, for: NaiveDateTime do
   def time_struct(data) do
-    data |> Calendar.NaiveDateTime.to_time
+    data |> Calendar.NaiveDateTime.to_time()
   end
 end
+
 defimpl Calendar.ContainsTime, for: Tuple do
   def time_struct({h, m, s}), do: Time.from_erl!({h, m, s})
   def time_struct({h, m, s, usec}), do: Time.from_erl!({h, m, s}, {usec, 6})
   # datetime tuple
-  def time_struct({{_,_,_},{h, m, s}}), do: Time.from_erl!({h, m, s})
+  def time_struct({{_, _, _}, {h, m, s}}), do: Time.from_erl!({h, m, s})
   # datetime tuple with microseconds
-  def time_struct({{_,_,_},{h, m, s, usec}}), do: Time.from_erl!({h, m, s}, {usec, 6})
+  def time_struct({{_, _, _}, {h, m, s, usec}}), do: Time.from_erl!({h, m, s}, {usec, 6})
 end
+
 defimpl Calendar.ContainsTime, for: Calendar.DateTime do
   def time_struct(data) do
-    %Time{hour: data.hour, minute: data.minute, second: data.second, microsecond: data.microsecond}
+    %Time{
+      hour: data.hour,
+      minute: data.minute,
+      second: data.second,
+      microsecond: data.microsecond
+    }
   end
 end
+
 defimpl Calendar.ContainsTime, for: Calendar.NaiveDateTime do
   def time_struct(data) do
-    %Time{hour: data.hour, minute: data.minute, second: data.second, microsecond: data.microsecond}
+    %Time{
+      hour: data.hour,
+      minute: data.minute,
+      second: data.second,
+      microsecond: data.microsecond
+    }
   end
 end

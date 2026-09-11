@@ -1,5 +1,4 @@
 defmodule Calendar.Date.Parse do
-
   @doc """
   Parses ISO 8601 date strings.
 
@@ -17,10 +16,11 @@ defmodule Calendar.Date.Parse do
       {:error, :invalid_date}
   """
   def iso8601(string) do
-    Calendar.NaiveDateTime.Parse.iso8601(string<>"T00:00:00")
+    Calendar.NaiveDateTime.Parse.iso8601(string <> "T00:00:00")
     |> iso8610result
   end
-  defp iso8610result({:ok, ndt, _}), do: {:ok, ndt |> Calendar.NaiveDateTime.to_date}
+
+  defp iso8610result({:ok, ndt, _}), do: {:ok, ndt |> Calendar.NaiveDateTime.to_date()}
   defp iso8610result({:error, :invalid_datetime, _}), do: {:error, :invalid_date}
   defp iso8610result({first, second, _}), do: {first, second}
 
@@ -68,13 +68,17 @@ defmodule Calendar.Date.Parse do
       _ -> :error
     end
   end
+
   defp do_iso_week_date(<<binyear::4-bytes, ?-, ?W, binweek::2-bytes, ?-, bday::1-bytes>>) do
-    {year, ""} = binyear |> Integer.parse
-    {week, ""} = binweek |> Integer.parse
-    {day, ""}  = bday |> Integer.parse
-    date = Calendar.Date.dates_for_week_number(year, week)
-    |> List.to_tuple
-    |> elem((day-1))
+    {year, ""} = binyear |> Integer.parse()
+    {week, ""} = binweek |> Integer.parse()
+    {day, ""} = bday |> Integer.parse()
+
+    date =
+      Calendar.Date.dates_for_week_number(year, week)
+      |> List.to_tuple()
+      |> elem(day - 1)
+
     {:ok, date}
   end
 

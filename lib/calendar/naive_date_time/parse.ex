@@ -17,12 +17,19 @@ defmodule Calendar.NaiveDateTime.Parse do
   """
   def asn1_generalized(string) do
     captured = string |> capture_generalized_time_string
+
     if captured do
-      parse_captured_iso8601(captured, captured["z"], captured["offset_hours"], captured["offset_mins"])
+      parse_captured_iso8601(
+        captured,
+        captured["z"],
+        captured["offset_hours"],
+        captured["offset_mins"]
+      )
     else
       {:bad_format, nil, nil}
     end
   end
+
   defp capture_generalized_time_string(string) do
     ~r/(?<year>[\d]{4})(?<month>[\d]{2})(?<day>[\d]{2})(?<hour>[\d]{2})(?<min>[\d]{2})(?<sec>[\d]{2})(\.(?<fraction>[\d]+))?(?<z>[zZ])?((?<offset_sign>[\+\-])(?<offset_hours>[\d]{1,2})(?<offset_mins>[\d]{2}))?/
     |> Regex.named_captures(string)
@@ -40,7 +47,11 @@ defmodule Calendar.NaiveDateTime.Parse do
   def asctime(string) do
     cap = capture_asctime_string(string)
     month_num = month_number_for_month_name(cap["month"])
-    Calendar.NaiveDateTime.from_erl({{cap["year"]|>to_int, month_num, cap["day"]|>to_int}, {cap["hour"]|>to_int, cap["min"]|>to_int, cap["sec"]|>to_int}})
+
+    Calendar.NaiveDateTime.from_erl(
+      {{cap["year"] |> to_int, month_num, cap["day"] |> to_int},
+       {cap["hour"] |> to_int, cap["min"] |> to_int, cap["sec"] |> to_int}}
+    )
   end
 
   @doc """
@@ -94,8 +105,14 @@ defmodule Calendar.NaiveDateTime.Parse do
   """
   def iso8601(string) do
     captured = capture_iso8601_string(string)
+
     if captured do
-      parse_captured_iso8601(captured, captured["z"], captured["offset_hours"], captured["offset_mins"])
+      parse_captured_iso8601(
+        captured,
+        captured["z"],
+        captured["offset_hours"],
+        captured["offset_mins"]
+      )
     else
       {:bad_format, nil, nil}
     end
@@ -104,12 +121,24 @@ defmodule Calendar.NaiveDateTime.Parse do
   defp parse_captured_iso8601(captured, z, _, _) when z != "" do
     parse_captured_iso8601(captured, "", "00", "00")
   end
+
   defp parse_captured_iso8601(captured, _z, "", "") do
-    {tag, ndt} = Calendar.NaiveDateTime.from_erl(erl_date_time_from_regex_map(captured), parse_fraction(captured["fraction"]))
+    {tag, ndt} =
+      Calendar.NaiveDateTime.from_erl(
+        erl_date_time_from_regex_map(captured),
+        parse_fraction(captured["fraction"])
+      )
+
     {tag, ndt, nil}
   end
+
   defp parse_captured_iso8601(captured, _z, offset_hours, offset_mins) do
-    {tag, ndt} = Calendar.NaiveDateTime.from_erl(erl_date_time_from_regex_map(captured), parse_fraction(captured["fraction"]))
+    {tag, ndt} =
+      Calendar.NaiveDateTime.from_erl(
+        erl_date_time_from_regex_map(captured),
+        parse_fraction(captured["fraction"])
+      )
+
     if tag == :ok do
       {:ok, offset_in_seconds} = offset_from_captured(captured, offset_hours, offset_mins)
       {tag, ndt, offset_in_seconds}
@@ -120,10 +149,13 @@ defmodule Calendar.NaiveDateTime.Parse do
 
   defp offset_from_captured(captured, offset_hours, offset_mins) do
     offset_in_secs = hours_mins_to_secs!(offset_hours, offset_mins)
-    offset_in_secs = case captured["offset_sign"] do
-      "-" -> offset_in_secs*-1
-      _   -> offset_in_secs
-    end
+
+    offset_in_secs =
+      case captured["offset_sign"] do
+        "-" -> offset_in_secs * -1
+        _ -> offset_in_secs
+      end
+
     {:ok, offset_in_secs}
   end
 
@@ -133,21 +165,26 @@ defmodule Calendar.NaiveDateTime.Parse do
   end
 
   defp erl_date_time_from_regex_map(mapped) do
-    erl_date_time_from_strings({{mapped["year"],mapped["month"],mapped["day"]},{mapped["hour"],mapped["min"],mapped["sec"]}})
+    erl_date_time_from_strings(
+      {{mapped["year"], mapped["month"], mapped["day"]},
+       {mapped["hour"], mapped["min"], mapped["sec"]}}
+    )
   end
 
-  defp erl_date_time_from_strings({{year, month, date},{hour, min, sec}}) do
-    { {year|>to_int, month|>to_int, date|>to_int},
-      {hour|>to_int, min|>to_int, sec|>to_int} }
+  defp erl_date_time_from_strings({{year, month, date}, {hour, min, sec}}) do
+    {{year |> to_int, month |> to_int, date |> to_int},
+     {hour |> to_int, min |> to_int, sec |> to_int}}
   end
 
   defp parse_fraction(""), do: {0, 0}
   # parse and return microseconds
   defp parse_fraction(string) do
-    usec = String.slice(string, 0..5)
-    |> String.pad_trailing(6, "0")
-    |> Integer.parse
-    |> elem(0)
+    usec =
+      String.slice(string, 0..5)
+      |> String.pad_trailing(6, "0")
+      |> Integer.parse()
+      |> elem(0)
+
     {usec, String.length(string)}
   end
 end

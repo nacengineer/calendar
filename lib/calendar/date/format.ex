@@ -62,7 +62,6 @@ defmodule Calendar.Date.Format do
     |> Strftime.strftime!("%Y-W%V")
   end
 
-
   @doc """
   Format a date as ISO 8601 year and week number with weekday.
 

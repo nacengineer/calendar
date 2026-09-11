@@ -1,7 +1,7 @@
 defmodule Calendar.DateTime.Interval do
-@moduledoc """
-An `Interval` consists of a start and an end `DateTime`.
-"""
+  @moduledoc """
+  An `Interval` consists of a start and an end `DateTime`.
+  """
 
   @type t :: %__MODULE__{from: %DateTime{}, to: %DateTime{}}
 

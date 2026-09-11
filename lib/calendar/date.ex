@@ -84,7 +84,7 @@ defmodule Calendar.Date do
     date
     |> contained_date
     |> to_erl
-    |> :calendar.iso_week_number
+    |> :calendar.iso_week_number()
   end
 
   @doc """
@@ -107,21 +107,27 @@ defmodule Calendar.Date do
             %Date{day: 3, month: 1, year: 2016}]
   """
   def dates_for_week_number(year, week_num) do
-    days = days_after_until(from_erl!({year-1, 12, 23}), from_erl!({year, 12, 31})) |> Enum.to_list
+    days =
+      days_after_until(from_erl!({year - 1, 12, 23}), from_erl!({year, 12, 31})) |> Enum.to_list()
+
     days = days ++ first_seven_dates_of_year(year)
+
     days
-    |> Enum.filter(fn(x) -> in_week?(x, year, week_num) end)
+    |> Enum.filter(fn x -> in_week?(x, year, week_num) end)
   end
+
   defp first_seven_dates_of_year(year) do
-    [ from_erl!({year+1, 1, 1}),
-      from_erl!({year+1, 1, 2}),
-      from_erl!({year+1, 1, 3}),
-      from_erl!({year+1, 1, 4}),
-      from_erl!({year+1, 1, 5}),
-      from_erl!({year+1, 1, 6}),
-      from_erl!({year+1, 1, 7}),
-      ]
+    [
+      from_erl!({year + 1, 1, 1}),
+      from_erl!({year + 1, 1, 2}),
+      from_erl!({year + 1, 1, 3}),
+      from_erl!({year + 1, 1, 4}),
+      from_erl!({year + 1, 1, 5}),
+      from_erl!({year + 1, 1, 6}),
+      from_erl!({year + 1, 1, 7})
+    ]
   end
+
   @doc "Like dates_for_week_number/2 but takes a tuple of {year, week_num} instead"
   def dates_for_week_number({year, week_num}), do: dates_for_week_number(year, week_num)
 
@@ -255,14 +261,16 @@ defmodule Calendar.Date do
   """
   def advance(date, days) when is_integer(days) do
     date = date |> contained_date
-    result = to_gregorian_days(date) + days
-    |> from_gregorian_days!
+
+    result =
+      (to_gregorian_days(date) + days)
+      |> from_gregorian_days!
+
     {:ok, result}
   end
 
-  def add(date, days),  do: advance(date, days)
+  def add(date, days), do: advance(date, days)
   def add!(date, days), do: advance!(date, days)
-
 
   @doc """
   Subtract `days` number of days from date.
@@ -282,7 +290,7 @@ defmodule Calendar.Date do
       iex> {{2014,12,27}, {21,30,59}} |> subtract(2)
       {:ok, %Date{day: 25, month: 12, year: 2014} }
   """
-  def subtract(date, days),  do: advance(date, -1 * days)
+  def subtract(date, days), do: advance(date, -1 * days)
   def subtract!(date, days), do: advance!(date, -1 * days)
 
   @doc """
@@ -338,16 +346,24 @@ defmodule Calendar.Date do
       [%Date{day: 27, month: 12, year: 2014}, %Date{day: 28, month: 12, year: 2014}, %Date{day: 29, month: 12, year: 2014}]
   """
   def days_after_until(from_date, until_date, include_from_date \\ false)
-  def days_after_until(from_date, until_date,  _include_from_date = false) do
+
+  def days_after_until(from_date, until_date, _include_from_date = false) do
     from_date = from_date |> contained_date
     until_date = until_date |> contained_date
-    Stream.unfold(next_day!(from_date), fn n -> if n == next_day!(until_date) do nil else {n, n |> next_day!} end end)
+
+    Stream.unfold(next_day!(from_date), fn n ->
+      if n == next_day!(until_date) do
+        nil
+      else
+        {n, n |> next_day!}
+      end
+    end)
   end
-  def days_after_until(from_date, until_date,  _include_from_date = true) do
+
+  def days_after_until(from_date, until_date, _include_from_date = true) do
     before_from_date = from_date |> contained_date |> prev_day!
     days_after_until(before_from_date, until_date)
   end
-
 
   @doc """
   Get a stream of dates going back in time. Takes a starting date and an end date. Includes end date.
@@ -363,12 +379,21 @@ defmodule Calendar.Date do
       [%Date{day: 27, month: 12, year: 2014}, %Date{day: 26, month: 12, year: 2014}, %Date{day: 25, month: 12, year: 2014}, %Date{day: 24, month: 12, year: 2014}]
   """
   def days_before_until(from_date, until_date, include_from_date \\ false)
+
   def days_before_until(from_date, until_date, _include_from_date = false) do
     from_date = from_date |> contained_date
     until_date = until_date |> contained_date
-    Stream.unfold(prev_day!(from_date), fn n -> if n == prev_day!(until_date) do nil else {n, n |> prev_day!} end end)
+
+    Stream.unfold(prev_day!(from_date), fn n ->
+      if n == prev_day!(until_date) do
+        nil
+      else
+        {n, n |> prev_day!}
+      end
+    end)
   end
-  def days_before_until(from_date, until_date,  _include_from_date = true) do
+
+  def days_before_until(from_date, until_date, _include_from_date = true) do
     from_date
     |> contained_date
     |> next_day!
@@ -395,7 +420,7 @@ defmodule Calendar.Date do
     date
     |> contained_date
     |> to_erl
-    |> :calendar.day_of_the_week
+    |> :calendar.day_of_the_week()
   end
 
   @doc """
@@ -411,7 +436,7 @@ defmodule Calendar.Date do
       iex> {2015, 7, 5} |> day_of_week_name # Sunday
       "Sunday"
   """
-  def day_of_week_name(date, lang\\:en) do
+  def day_of_week_name(date, lang \\ :en) do
     date
     |> contained_date
     |> Calendar.Strftime.strftime!("%A", lang)
@@ -433,6 +458,7 @@ defmodule Calendar.Date do
   """
   def day_of_week_zb(date) do
     num = date |> day_of_week
+
     case num do
       7 -> 0
       _ -> num
@@ -457,17 +483,24 @@ defmodule Calendar.Date do
   """
   def day_number_in_year(date) do
     date = date |> contained_date
-    day_count_previous_months = Enum.map(previous_months_for_month(date.month),
-      fn month ->
-        :calendar.last_day_of_the_month(date.year, month)
-      end)
-    |> Enum.reduce(0, fn(day_count, acc) -> day_count + acc end)
-    day_count_previous_months+date.day
+
+    day_count_previous_months =
+      Enum.map(
+        previous_months_for_month(date.month),
+        fn month ->
+          :calendar.last_day_of_the_month(date.year, month)
+        end
+      )
+      |> Enum.reduce(0, fn day_count, acc -> day_count + acc end)
+
+    day_count_previous_months + date.day
   end
+
   # a list or range of previous month names
   defp previous_months_for_month(1), do: []
+
   defp previous_months_for_month(month) do
-    1..(month-1)
+    1..(month - 1)
   end
 
   @doc """
@@ -566,17 +599,21 @@ defmodule Calendar.Date do
       {:error, :invalid_ordinal_date}
   """
   def from_ordinal(year, ordinal_day) do
-    list = days_after_until({year-1, 12, 31}, {year, 12, 31})
-    |> Enum.to_list
+    list =
+      days_after_until({year - 1, 12, 31}, {year, 12, 31})
+      |> Enum.to_list()
+
     do_from_ordinal(year, ordinal_day, list)
   end
-  defp do_from_ordinal(year, ordinal_day, [head|tail]) do
+
+  defp do_from_ordinal(year, ordinal_day, [head | tail]) do
     if day_number_in_year(head) == ordinal_day do
       {:ok, head}
     else
       do_from_ordinal(year, ordinal_day, tail)
     end
   end
+
   defp do_from_ordinal(_, _, []), do: {:error, :invalid_ordinal_date}
 
   @doc """
@@ -619,8 +656,8 @@ defmodule Calendar.Date do
       %Date{day: 1, month: 3, year: 2016}
   """
   def today_utc do
-    Calendar.DateTime.now_utc
-    |> Calendar.DateTime.to_date
+    Calendar.DateTime.now_utc()
+    |> Calendar.DateTime.to_date()
   end
 
   @doc """
@@ -635,8 +672,8 @@ defmodule Calendar.Date do
   """
   def today!(timezone) do
     timezone
-    |> Calendar.DateTime.now!
-    |> Calendar.DateTime.to_date
+    |> Calendar.DateTime.now!()
+    |> Calendar.DateTime.to_date()
   end
 
   defp contained_date(date_container), do: Calendar.ContainsDate.date_struct(date_container)
@@ -645,28 +682,43 @@ end
 defimpl Calendar.ContainsDate, for: Calendar.Date do
   def date_struct(data), do: data
 end
+
 defimpl Calendar.ContainsDate, for: Calendar.DateTime do
   def date_struct(data) do
-    data |> Calendar.DateTime.to_date
+    data |> Calendar.DateTime.to_date()
   end
 end
+
 defimpl Calendar.ContainsDate, for: Calendar.NaiveDateTime do
   def date_struct(data) do
-    data |> Calendar.NaiveDateTime.to_date
+    data |> Calendar.NaiveDateTime.to_date()
   end
 end
+
 defimpl Calendar.ContainsDate, for: Tuple do
   def date_struct({y, m, d}) when y > 23, do: Calendar.Date.from_erl!({y, m, d})
-  def date_struct({y, _m, _d}) when y <= 23, do: raise "date_struct/1 was called. ContainsDate protocol is not supported for 3-element-tuples where the year is 23 or less. This is to avoid accidently trying to use a time tuple as a date. If you want to work with a date from the year 23 or earlier, consider using a Calendar.Date struct instead."
+
+  def date_struct({y, _m, _d}) when y <= 23,
+    do:
+      raise(
+        "date_struct/1 was called. ContainsDate protocol is not supported for 3-element-tuples where the year is 23 or less. This is to avoid accidently trying to use a time tuple as a date. If you want to work with a date from the year 23 or earlier, consider using a Calendar.Date struct instead."
+      )
+
   def date_struct({{y, m, d}, {_hour, _min, _sec}}), do: Calendar.Date.from_erl!({y, m, d})
   def date_struct({{y, m, d}, {_hour, _min, _sec, _usec}}), do: Calendar.Date.from_erl!({y, m, d})
 end
+
 defimpl Calendar.ContainsDate, for: Date do
-  def date_struct(%{calendar: Calendar.ISO}=data), do: %Date{day: data.day, month: data.month, year: data.year}
+  def date_struct(%{calendar: Calendar.ISO} = data),
+    do: %Date{day: data.day, month: data.month, year: data.year}
 end
+
 defimpl Calendar.ContainsDate, for: DateTime do
-  def date_struct(%{calendar: Calendar.ISO}=data), do: %Date{day: data.day, month: data.month, year: data.year}
+  def date_struct(%{calendar: Calendar.ISO} = data),
+    do: %Date{day: data.day, month: data.month, year: data.year}
 end
+
 defimpl Calendar.ContainsDate, for: NaiveDateTime do
-  def date_struct(%{calendar: Calendar.ISO}=data), do: %Date{day: data.day, month: data.month, year: data.year}
+  def date_struct(%{calendar: Calendar.ISO} = data),
+    do: %Date{day: data.day, month: data.month, year: data.year}
 end

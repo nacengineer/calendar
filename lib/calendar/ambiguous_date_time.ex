@@ -35,7 +35,7 @@ defmodule Calendar.AmbiguousDateTime do
       {:error, :no_matches}
   """
   def disamb_total_off(ambiguous_date_time, total_off_secs) do
-    func = fn(dt) -> dt.utc_offset+dt.std_offset == total_off_secs end
+    func = fn dt -> dt.utc_offset + dt.std_offset == total_off_secs end
     disamb(ambiguous_date_time, func)
   end
 
@@ -61,17 +61,21 @@ defmodule Calendar.AmbiguousDateTime do
       {:error, :more_than_one_match}
   """
   def disamb(ambiguous_date_time, filtering_func) do
-    matching = ambiguous_date_time.possible_date_times
-    |> Enum.filter(filtering_func)
+    matching =
+      ambiguous_date_time.possible_date_times
+      |> Enum.filter(filtering_func)
+
     disamb_matching_date_times(matching, length(matching))
   end
 
   defp disamb_matching_date_times(date_times, 1) do
     {:ok, hd(date_times)}
   end
+
   defp disamb_matching_date_times(_, 0) do
     {:error, :no_matches}
   end
+
   defp disamb_matching_date_times(_, match_count) when match_count > 1 do
     {:error, :more_than_one_match}
   end

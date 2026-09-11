@@ -18,7 +18,7 @@ defmodule DateTimeTest do
   end
 
   test "to erl" do
-    {{year,_,_},{_,_,_}} = Calendar.DateTime.to_erl(Calendar.DateTime.now!("Etc/UTC"))
+    {{year, _, _}, {_, _, _}} = Calendar.DateTime.to_erl(Calendar.DateTime.now!("Etc/UTC"))
     assert year > 1900
   end
 
@@ -38,11 +38,43 @@ defmodule DateTimeTest do
   end
 
   test "shift_zone! works even for periods when wall clock is set back in fall because of DST" do
-      result =  from_erl!({{1999,10,31},{0,29,10}}, "Etc/UTC") |> shift_zone!("Europe/Copenhagen") |> shift_zone!("Etc/UTC") |> shift_zone!("Europe/Copenhagen")
-      assert result == %DateTime{zone_abbr: "CEST", day: 31, hour: 2, minute: 29, month: 10, second: 10, time_zone: "Europe/Copenhagen", utc_offset: 3600, std_offset: 3600, year: 1999}
+    result =
+      from_erl!({{1999, 10, 31}, {0, 29, 10}}, "Etc/UTC")
+      |> shift_zone!("Europe/Copenhagen")
+      |> shift_zone!("Etc/UTC")
+      |> shift_zone!("Europe/Copenhagen")
 
-      result2 = from_erl!({{1999,10,31},{1,29,10}}, "Etc/UTC") |> shift_zone!("Europe/Copenhagen") |> shift_zone!("Etc/UTC") |> shift_zone!("Europe/Copenhagen")
-      assert result2 == %DateTime{zone_abbr: "CET", day: 31, hour: 2, minute: 29, month: 10, second: 10, time_zone: "Europe/Copenhagen", utc_offset: 3600, std_offset: 0, year: 1999}
+    assert result == %DateTime{
+             zone_abbr: "CEST",
+             day: 31,
+             hour: 2,
+             minute: 29,
+             month: 10,
+             second: 10,
+             time_zone: "Europe/Copenhagen",
+             utc_offset: 3600,
+             std_offset: 3600,
+             year: 1999
+           }
+
+    result2 =
+      from_erl!({{1999, 10, 31}, {1, 29, 10}}, "Etc/UTC")
+      |> shift_zone!("Europe/Copenhagen")
+      |> shift_zone!("Etc/UTC")
+      |> shift_zone!("Europe/Copenhagen")
+
+    assert result2 == %DateTime{
+             zone_abbr: "CET",
+             day: 31,
+             hour: 2,
+             minute: 29,
+             month: 10,
+             second: 10,
+             time_zone: "Europe/Copenhagen",
+             utc_offset: 3600,
+             std_offset: 0,
+             year: 1999
+           }
   end
 
   test "shift_zone of a leap second" do
@@ -139,6 +171,9 @@ defmodule DateTimeTest do
   end
 
   test "diff works for anything that contains a date time" do
-    assert diff(%SomethingThatContainsDateTime{}, from_erl!({{2015, 6, 30}, {23, 59, 60}}, "Etc/UTC")) == {:ok, -15634739, 0, :before}
+    assert diff(
+             %SomethingThatContainsDateTime{},
+             from_erl!({{2015, 6, 30}, {23, 59, 60}}, "Etc/UTC")
+           ) == {:ok, -15_634_739, 0, :before}
   end
 end

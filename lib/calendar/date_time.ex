@@ -21,7 +21,7 @@ defmodule Calendar.DateTime do
   Like DateTime.now!("Etc/UTC")
   """
   def now_utc do
-    DateTime.utc_now
+    DateTime.utc_now()
   end
 
   @doc """
@@ -43,6 +43,7 @@ defmodule Calendar.DateTime do
        utc_offset: 3600, year: 2014}
   """
   def now!("Etc/UTC"), do: now_utc()
+
   def now!(timezone) do
     {:ok, datetime} = now(timezone)
     datetime
@@ -60,14 +61,22 @@ defmodule Calendar.DateTime do
       iex> Calendar.DateTime.now "Invalid/Narnia"
       :error
   """
-  @spec now(String.t) :: {:ok, DateTime.t} | :error
+  @spec now(String.t()) :: {:ok, DateTime.t()} | :error
   def now(timezone) do
     try do
       {now_utc_secs, microsecond} = now_utc() |> gregorian_seconds_and_microsecond
       period_list = TimeZoneData.periods_for_time(timezone, now_utc_secs, :utc)
-      period = hd period_list
-      {:ok, now_utc_secs + period.utc_off + period.std_off
-      |>from_gregorian_seconds!(timezone, period.zone_abbr, period.utc_off, period.std_off, microsecond) }
+      period = hd(period_list)
+
+      {:ok,
+       (now_utc_secs + period.utc_off + period.std_off)
+       |> from_gregorian_seconds!(
+         timezone,
+         period.zone_abbr,
+         period.utc_off,
+         period.std_off,
+         microsecond
+       )}
     rescue
       _ -> :error
     end
@@ -84,15 +93,19 @@ defmodule Calendar.DateTime do
                         time_zone: "Europe/Copenhagen", utc_offset: 3600, std_offset: 3600, year: 2014}
 
   """
-  def shift_zone!(%DateTime{time_zone: timezone} = date_time, timezone), do: date_time # when shifting to same zone, just return the same datetime unchanged
+  # when shifting to same zone, just return the same datetime unchanged
+  def shift_zone!(%DateTime{time_zone: timezone} = date_time, timezone), do: date_time
   # In case we are shifting a leap second, shift the second before and then
   # correct the second back to 60. This is to avoid problems with the erlang
   # gregorian second system (lack of) handling of leap seconds.
   def shift_zone!(%DateTime{second: 60} = date_time, timezone) do
-    second_before = %DateTime{date_time | second: 59}
-    |> shift_zone!(timezone)
+    second_before =
+      %DateTime{date_time | second: 59}
+      |> shift_zone!(timezone)
+
     %DateTime{second_before | second: 60}
   end
+
   def shift_zone!(date_time, timezone) do
     date_time
     |> contained_date_time
@@ -169,7 +182,6 @@ defmodule Calendar.DateTime do
   """
   def add!(dt, seconds), do: advance!(dt, seconds)
 
-
   @doc """
   Takes a `DateTime` struct and an integer. Subtracts the number of seconds found in the
   `seconds` argument.
@@ -196,7 +208,6 @@ defmodule Calendar.DateTime do
   """
   def subtract(dt, seconds), do: advance(dt, -1 * seconds)
 
-
   @doc """
   Takes a `DateTime` struct and an integer. Returns a `DateTime` struct in the past which is less
   by the number of seconds found in the `seconds` argument. *NOTE:* `subtract!/2` ignores leap seconds. The
@@ -220,24 +231,27 @@ defmodule Calendar.DateTime do
       iex> from_erl!({{2014,10,2},{0,0,0}}, "America/New_York", {123456, 6}) |> subtract!(-200)
       %DateTime{zone_abbr: "EDT", day: 2, hour: 0, minute: 3, month: 10, second: 20, std_offset: 3600, time_zone: "America/New_York", microsecond: {123456, 6}, utc_offset: -18000, year: 2014}
   """
-  def subtract!(dt, seconds) , do: advance!(dt, -1 * seconds)
+  def subtract!(dt, seconds), do: advance!(dt, -1 * seconds)
 
   @doc """
   Deprecated version of `add/2`
   """
   def advance(date_time, seconds) do
     date_time = date_time |> contained_date_time
+
     try do
-      advanced = date_time
-      |> shift_zone!("Etc/UTC")
-      |> gregorian_seconds
-      |> Kernel.+(seconds)
-      |> from_gregorian_seconds!("Etc/UTC", "UTC", 0, 0, date_time.microsecond)
-      |> shift_zone!(date_time.time_zone)
+      advanced =
+        date_time
+        |> shift_zone!("Etc/UTC")
+        |> gregorian_seconds
+        |> Kernel.+(seconds)
+        |> from_gregorian_seconds!("Etc/UTC", "UTC", 0, 0, date_time.microsecond)
+        |> shift_zone!(date_time.time_zone)
+
       {:ok, advanced}
     rescue
       FunctionClauseError ->
-      {:error, :function_clause_error}
+        {:error, :function_clause_error}
     end
   end
 
@@ -317,11 +331,18 @@ defmodule Calendar.DateTime do
     sec_diff = first_utc - second_utc
     {:ok, sec_diff, 0, gt_lt_eq(sec_diff, 0)}
   end
-  def diff(%DateTime{microsecond: {first_microsecond, _}} = first_dt, %DateTime{microsecond: {second_microsecond, _}} = second_dt) do
-    {:ok, sec, 0, _} = diff(Map.put(first_dt, :microsecond, {0, 0}), Map.put(second_dt, :microsecond, {0, 0}))
+
+  def diff(
+        %DateTime{microsecond: {first_microsecond, _}} = first_dt,
+        %DateTime{microsecond: {second_microsecond, _}} = second_dt
+      ) do
+    {:ok, sec, 0, _} =
+      diff(Map.put(first_dt, :microsecond, {0, 0}), Map.put(second_dt, :microsecond, {0, 0}))
+
     microsecond = first_microsecond - second_microsecond
-    diff_sort_out_decimal {:ok, sec, microsecond}
+    diff_sort_out_decimal({:ok, sec, microsecond})
   end
+
   def diff(first_cdt, second_cdt) do
     diff(contained_date_time(first_cdt), contained_date_time(second_cdt))
   end
@@ -331,24 +352,29 @@ defmodule Calendar.DateTime do
   defp gt_lt_eq(sec, _) when sec > 0, do: :after
   defp gt_lt_eq(0, microsecond) when microsecond > 0, do: :after
   defp gt_lt_eq(0, microsecond) when microsecond < 0, do: :before
+
   defp diff_sort_out_decimal({:ok, sec, microsecond}) when sec > 0 and microsecond < 0 do
     sec = sec - 1
     microsecond = 1_000_000 + microsecond
     {:ok, sec, microsecond, gt_lt_eq(sec, microsecond)}
   end
+
   defp diff_sort_out_decimal({:ok, sec, microsecond}) when sec == -1 and microsecond > 0 do
     sec = sec + 1
     microsecond = microsecond - 1_000_000
     {:ok, sec, microsecond, gt_lt_eq(sec, microsecond)}
   end
+
   defp diff_sort_out_decimal({:ok, sec, microsecond}) when sec < 0 and microsecond > 0 do
     sec = sec + 1
     microsecond = 1_000_000 - microsecond
     {:ok, sec, microsecond, gt_lt_eq(sec, microsecond)}
   end
+
   defp diff_sort_out_decimal({:ok, sec, microsecond}) when sec < 0 and microsecond < 0 do
     {:ok, sec, abs(microsecond), gt_lt_eq(sec, microsecond)}
   end
+
   defp diff_sort_out_decimal({:ok, sec, microsecond}) do
     {:ok, sec, microsecond, gt_lt_eq(sec, microsecond)}
   end
@@ -394,6 +420,7 @@ defmodule Calendar.DateTime do
     {_, _, _, comparison} = diff(dt1, dt2)
     comparison == :before
   end
+
   @doc """
   Takes a two `DateTime`s and returns true if the first
   is at the same time as the second one.
@@ -438,13 +465,16 @@ defmodule Calendar.DateTime do
   end
 
   defp shift_to_utc(%DateTime{time_zone: "Etc/UTC"} = dt), do: dt
+
   defp shift_to_utc(%DateTime{} = date_time) do
-    greg_secs = :calendar.datetime_to_gregorian_seconds(date_time|>to_erl)
+    greg_secs = :calendar.datetime_to_gregorian_seconds(date_time |> to_erl)
     period_list = TimeZoneData.periods_for_time(date_time.time_zone, greg_secs, :wall)
     period = period_by_offset(period_list, date_time.utc_offset, date_time.std_offset)
-    greg_secs-period.utc_off-period.std_off
-    |>from_gregorian_seconds!("Etc/UTC", "UTC", 0, 0, date_time.microsecond)
+
+    (greg_secs - period.utc_off - period.std_off)
+    |> from_gregorian_seconds!("Etc/UTC", "UTC", 0, 0, date_time.microsecond)
   end
+
   defp shift_to_utc(date_time) do
     date_time |> contained_date_time |> shift_to_utc
   end
@@ -457,17 +487,25 @@ defmodule Calendar.DateTime do
   defp period_by_offset(period_list, _utc_off, _std_off) when length(period_list) == 1 do
     hd(period_list)
   end
+
   defp period_by_offset(period_list, utc_off, std_off) do
     matching = period_list |> Enum.filter(&(&1.utc_off == utc_off && &1.std_off == std_off))
     hd(matching)
   end
 
   defp shift_from_utc(utc_date_time, to_timezone) do
-    greg_secs = :calendar.datetime_to_gregorian_seconds(utc_date_time|>to_erl)
+    greg_secs = :calendar.datetime_to_gregorian_seconds(utc_date_time |> to_erl)
     period_list = TimeZoneData.periods_for_time(to_timezone, greg_secs, :utc)
-    period = period_list|>hd
-    greg_secs+period.utc_off+period.std_off
-    |>from_gregorian_seconds!(to_timezone, period.zone_abbr, period.utc_off, period.std_off, utc_date_time.microsecond)
+    period = period_list |> hd
+
+    (greg_secs + period.utc_off + period.std_off)
+    |> from_gregorian_seconds!(
+      to_timezone,
+      period.zone_abbr,
+      period.utc_off,
+      period.std_off,
+      utc_date_time.microsecond
+    )
   end
 
   # Takes gregorian seconds and and optional timezone.
@@ -480,8 +518,8 @@ defmodule Calendar.DateTime do
   #   %DateTime{date: 26, hour: 17, minute: 10, month: 9, second: 20, time_zone: "America/Montevideo", year: 2014}
   defp from_gregorian_seconds!(gregorian_seconds, timezone, abbr, utc_off, std_off, microsecond) do
     gregorian_seconds
-    |>:calendar.gregorian_seconds_to_datetime
-    |>from_erl!(timezone, abbr, utc_off, std_off, microsecond)
+    |> :calendar.gregorian_seconds_to_datetime()
+    |> from_erl!(timezone, abbr, utc_off, std_off, microsecond)
   end
 
   @doc """
@@ -497,8 +535,8 @@ defmodule Calendar.DateTime do
             time_zone: "Etc/UTC", microsecond: {799236, 6}, utc_offset: 0, year: 2016}
   """
   def from_erlang_timestamp({_, _, microsecond} = erlang_timestamp) do
-    dt = erlang_timestamp |> :calendar.now_to_universal_time
-    from_erl!(dt, "Etc/UTC" , {microsecond, 6})
+    dt = erlang_timestamp |> :calendar.now_to_universal_time()
+    from_erl!(dt, "Etc/UTC", {microsecond, 6})
   end
 
   @doc """
@@ -569,34 +607,63 @@ defmodule Calendar.DateTime do
 
   """
   def from_erl(date_time, timezone, microsecond \\ {0, 0})
+
   def from_erl(date_time, timezone, microsecond) when is_integer(microsecond) do
     from_erl(date_time, timezone, {microsecond, 6})
   end
+
   def from_erl({date, {h, m, s, microsecond}}, timezone, _ignored_extra_microsecond) do
     date_time = {date, {h, m, s}}
     validity = validate_erl_datetime(date_time, timezone)
     from_erl_validity(date_time, timezone, validity, {microsecond, 6})
   end
+
   def from_erl(date_time, timezone, microsecond) do
     validity = validate_erl_datetime(date_time, timezone)
     from_erl_validity(date_time, timezone, validity, microsecond)
   end
 
   # Date, time and timezone. Date and time is valid.
-  defp from_erl_validity({{year, month, day}, {hour, minute, second}}, "Etc/UTC", true, microsecond) do
+  defp from_erl_validity(
+         {{year, month, day}, {hour, minute, second}},
+         "Etc/UTC",
+         true,
+         microsecond
+       ) do
     # "Fast track" version for UTC
     # In case of UTC, we already know the timezone exists and will not query any Tzdata
-    {:ok, %DateTime{zone_abbr: "UTC", day: day, hour: hour, minute: minute, month: month, second: second, std_offset: 0, time_zone: "Etc/UTC", microsecond: microsecond, utc_offset: 0, year: year}}
+    {:ok,
+     %DateTime{
+       zone_abbr: "UTC",
+       day: day,
+       hour: hour,
+       minute: minute,
+       month: month,
+       second: second,
+       std_offset: 0,
+       time_zone: "Etc/UTC",
+       microsecond: microsecond,
+       utc_offset: 0,
+       year: year
+     }}
   end
+
   defp from_erl_validity(datetime, timezone, true, microsecond) do
     # validate that timezone exists
-    from_erl_timezone_validity(datetime, timezone, TimeZoneData.zone_exists?(timezone), microsecond)
+    from_erl_timezone_validity(
+      datetime,
+      timezone,
+      TimeZoneData.zone_exists?(timezone),
+      microsecond
+    )
   end
+
   defp from_erl_validity(_, _, false, _) do
     {:error, :invalid_datetime}
   end
 
   defp from_erl_timezone_validity(_, _, false, _), do: {:error, :timezone_not_found}
+
   defp from_erl_timezone_validity({date, time}, timezone, true, microsecond) do
     # get periods for time
     greg_secs = :calendar.datetime_to_gregorian_seconds({date, time})
@@ -607,28 +674,73 @@ defmodule Calendar.DateTime do
   defp from_erl_periods(_, _, periods, _) when periods == [] do
     {:error, :invalid_datetime_for_timezone}
   end
-  defp from_erl_periods({{year, month, day}, {hour, min, sec}}, timezone, periods, microsecond) when length(periods) == 1 do
+
+  defp from_erl_periods({{year, month, day}, {hour, min, sec}}, timezone, periods, microsecond)
+       when length(periods) == 1 do
     period = periods |> hd
-    {:ok, %DateTime{year: year, month: month, day: day, hour: hour,
-         minute: min, second: sec, time_zone: timezone, zone_abbr: period.zone_abbr,
-         utc_offset: period.utc_off, std_offset: period.std_off, microsecond: microsecond } }
+
+    {:ok,
+     %DateTime{
+       year: year,
+       month: month,
+       day: day,
+       hour: hour,
+       minute: min,
+       second: sec,
+       time_zone: timezone,
+       zone_abbr: period.zone_abbr,
+       utc_offset: period.utc_off,
+       std_offset: period.std_off,
+       microsecond: microsecond
+     }}
   end
+
   # When a time is ambigous (for instance switching from summer- to winter-time)
-  defp from_erl_periods({{year, month, day}, {hour, min, sec}}, timezone, periods, microsecond) when length(periods) == 2 do
+  defp from_erl_periods({{year, month, day}, {hour, min, sec}}, timezone, periods, microsecond)
+       when length(periods) == 2 do
     possible_date_times =
-    Enum.map(periods, fn period ->
-           %DateTime{year: year, month: month, day: day, hour: hour,
-           minute: min, second: sec, time_zone: timezone, zone_abbr: period.zone_abbr,
-           utc_offset: period.utc_off, std_offset: period.std_off, microsecond: microsecond }
-       end )
-    # sort by abbreviation
-    |> Enum.sort(fn dt1, dt2 -> dt1.zone_abbr <= dt2.zone_abbr end)
+      Enum.map(periods, fn period ->
+        %DateTime{
+          year: year,
+          month: month,
+          day: day,
+          hour: hour,
+          minute: min,
+          second: sec,
+          time_zone: timezone,
+          zone_abbr: period.zone_abbr,
+          utc_offset: period.utc_off,
+          std_offset: period.std_off,
+          microsecond: microsecond
+        }
+      end)
+      # sort by abbreviation
+      |> Enum.sort(fn dt1, dt2 -> dt1.zone_abbr <= dt2.zone_abbr end)
 
-    {:ambiguous, %Calendar.AmbiguousDateTime{ possible_date_times: possible_date_times} }
+    {:ambiguous, %Calendar.AmbiguousDateTime{possible_date_times: possible_date_times}}
   end
 
-  defp from_erl!({{year, month, day}, {hour, min, sec}}, timezone, abbr, utc_off, std_off, microsecond) do
-    %DateTime{year: year, month: month, day: day, hour: hour, minute: min, second: sec, time_zone: timezone, zone_abbr: abbr, utc_offset: utc_off, std_offset: std_off, microsecond: microsecond}
+  defp from_erl!(
+         {{year, month, day}, {hour, min, sec}},
+         timezone,
+         abbr,
+         utc_off,
+         std_off,
+         microsecond
+       ) do
+    %DateTime{
+      year: year,
+      month: month,
+      day: day,
+      hour: hour,
+      minute: min,
+      second: sec,
+      time_zone: timezone,
+      zone_abbr: abbr,
+      utc_offset: utc_off,
+      std_offset: std_off,
+      microsecond: microsecond
+    }
   end
 
   @doc """
@@ -655,12 +767,13 @@ defmodule Calendar.DateTime do
                            zone_abbr: "-02", utc_offset: -10800, std_offset: 3600}
       }
   """
-  def from_erl_total_off(erl_dt, timezone, total_off, microsecond\\{0,0}) do
+  def from_erl_total_off(erl_dt, timezone, total_off, microsecond \\ {0, 0}) do
     h_from_erl_total_off(from_erl(erl_dt, timezone, microsecond), total_off)
   end
 
   defp h_from_erl_total_off({:ok, result}, _total_off), do: {:ok, result}
   defp h_from_erl_total_off({:error, result}, _total_off), do: {:error, result}
+
   defp h_from_erl_total_off({:ambiguous, result}, total_off) do
     result |> Calendar.AmbiguousDateTime.disamb_total_off(total_off)
   end
@@ -677,7 +790,11 @@ defmodule Calendar.DateTime do
                            zone_abbr: "-02", utc_offset: -10800, std_offset: 3600}
       }
   """
-  def from_micro_erl_total_off({{year, mon, day}, {hour, min, sec, microsecond}}, timezone, total_off) do
+  def from_micro_erl_total_off(
+        {{year, mon, day}, {hour, min, sec, microsecond}},
+        timezone,
+        total_off
+      ) do
     from_erl_total_off({{year, mon, day}, {hour, min, sec}}, timezone, total_off, microsecond)
   end
 
@@ -689,9 +806,17 @@ defmodule Calendar.DateTime do
       iex> from_erl!({{2014,10,15},{2,37,22}}, "Etc/UTC") |> Calendar.DateTime.to_erl
       {{2014, 10, 15}, {2, 37, 22}}
   """
-  def to_erl(%DateTime{year: year, month: month, day: day, hour: hour, minute: min, second: second}) do
+  def to_erl(%DateTime{
+        year: year,
+        month: month,
+        day: day,
+        hour: hour,
+        minute: min,
+        second: second
+      }) do
     {{year, month, day}, {hour, min, second}}
   end
+
   def to_erl(date_time) do
     date_time |> contained_date_time |> to_erl
   end
@@ -709,12 +834,30 @@ defmodule Calendar.DateTime do
       iex> from_erl!({{2014,10,15},{2,37,22}}, "Etc/UTC", {0, 0}) |> Calendar.DateTime.to_micro_erl
       {{2014, 10, 15}, {2, 37, 22, 0}}
   """
-  def to_micro_erl(%DateTime{year: year, month: month, day: day, hour: hour, minute: min, second: sec, microsecond: {0, 0}}) do
+  def to_micro_erl(%DateTime{
+        year: year,
+        month: month,
+        day: day,
+        hour: hour,
+        minute: min,
+        second: sec,
+        microsecond: {0, 0}
+      }) do
     {{year, month, day}, {hour, min, sec, 0}}
   end
-  def to_micro_erl(%DateTime{year: year, month: month, day: day, hour: hour, minute: min, second: sec, microsecond: {microsecond,_}}) do
+
+  def to_micro_erl(%DateTime{
+        year: year,
+        month: month,
+        day: day,
+        hour: hour,
+        minute: min,
+        second: sec,
+        microsecond: {microsecond, _}
+      }) do
     {{year, month, day}, {hour, min, sec, microsecond}}
   end
+
   def to_micro_erl(date_time) do
     date_time |> contained_date_time |> to_micro_erl
   end
@@ -729,6 +872,7 @@ defmodule Calendar.DateTime do
   def to_date(%DateTime{} = dt) do
     %Date{year: dt.year, month: dt.month, day: dt.day}
   end
+
   def to_date(dt), do: dt |> contained_date_time |> to_date
 
   @doc """
@@ -741,6 +885,7 @@ defmodule Calendar.DateTime do
   def to_time(%DateTime{} = dt) do
     %Time{hour: dt.hour, minute: dt.minute, second: dt.second, microsecond: dt.microsecond}
   end
+
   def to_time(dt), do: dt |> contained_date_time |> to_time
 
   @doc """
@@ -752,6 +897,7 @@ defmodule Calendar.DateTime do
   def to_date_and_time(%DateTime{} = dt) do
     {to_date(dt), to_time(dt)}
   end
+
   def to_date_and_time(dt), do: dt |> contained_date_time |> to_date_and_time
 
   @doc """
@@ -766,7 +912,7 @@ defmodule Calendar.DateTime do
   """
   def from_naive(ndt, timezone) do
     ndt
-    |> Calendar.NaiveDateTime.to_erl
+    |> Calendar.NaiveDateTime.to_erl()
     |> from_erl(timezone, ndt.microsecond)
   end
 
@@ -777,7 +923,8 @@ defmodule Calendar.DateTime do
       %NaiveDateTime{day: 15, microsecond: {55, 6}, hour: 2, minute: 37, month: 10, second: 22, year: 2014}
   """
   def to_naive(dt) do
-    dt |> to_erl
+    dt
+    |> to_erl
     |> Calendar.NaiveDateTime.from_erl!(dt.microsecond)
   end
 
@@ -792,7 +939,7 @@ defmodule Calendar.DateTime do
   """
   def gregorian_seconds(date_time) do
     date_time = date_time |> contained_date_time
-    :calendar.datetime_to_gregorian_seconds(date_time|>to_erl)
+    :calendar.datetime_to_gregorian_seconds(date_time |> to_erl)
   end
 
   def gregorian_seconds_and_microsecond(date_time) do
@@ -811,7 +958,12 @@ defmodule Calendar.DateTime do
   """
   def from_date_and_time_and_zone(date_container, time_container, timezone) do
     contained_time = Calendar.ContainsTime.time_struct(time_container)
-    from_erl({Calendar.Date.to_erl(date_container), Calendar.Time.to_erl(contained_time)}, timezone, contained_time.microsecond)
+
+    from_erl(
+      {Calendar.Date.to_erl(date_container), Calendar.Time.to_erl(contained_time)},
+      timezone,
+      contained_time.microsecond
+    )
   end
 
   @doc """
@@ -835,29 +987,52 @@ defmodule Calendar.DateTime do
   defp validate_erl_datetime({date, time}, timezone) do
     :calendar.valid_date(date) && valid_time_part_of_datetime(date, time, timezone)
   end
+
   # Validate time part of a datetime
   # The date and timezone part is only used for leap seconds
   defp valid_time_part_of_datetime(date, {h, m, 60}, "Etc/UTC") do
-    TimeZoneData.leap_seconds |> Enum.member?({date, {h, m, 60}})
+    TimeZoneData.leap_seconds() |> Enum.member?({date, {h, m, 60}})
   end
+
   defp valid_time_part_of_datetime(date, {h, m, 60}, timezone) do
     {tag, utc_datetime} = from_erl({date, {h, m, 59}}, timezone)
+
     case tag do
-      :ok -> {date_utc, {h, m, s}} = utc_datetime
-        |> shift_zone!("Etc/UTC")
-        |> to_erl
-        valid_time_part_of_datetime(date_utc, {h, m, s+1}, "Etc/UTC")
-      _ -> false
+      :ok ->
+        {date_utc, {h, m, s}} =
+          utc_datetime
+          |> shift_zone!("Etc/UTC")
+          |> to_erl
+
+        valid_time_part_of_datetime(date_utc, {h, m, s + 1}, "Etc/UTC")
+
+      _ ->
+        false
     end
   end
+
   defp valid_time_part_of_datetime(_date, {h, m, s}, _timezone) do
-    h>=0 and h<=23 and m>=0 and m<=59 and s>=0 and s<=60
+    h >= 0 and h <= 23 and m >= 0 and m <= 59 and s >= 0 and s <= 60
   end
 end
 
 defimpl Calendar.ContainsDateTime, for: DateTime do
   def dt_struct(data), do: data
 end
+
 defimpl Calendar.ContainsDateTime, for: Calendar.DateTime do
-  def dt_struct(%{calendar: Calendar.ISO}=data), do: %DateTime{day: data.day, month: data.month, year: data.year, hour: data.hour, minute: data.minute, second: data.second, microsecond: data.microsecond, zone_abbr: data.zone_abbr, time_zone: data.time_zone, utc_offset: data.utc_offset, std_offset: data.std_offset}
+  def dt_struct(%{calendar: Calendar.ISO} = data),
+    do: %DateTime{
+      day: data.day,
+      month: data.month,
+      year: data.year,
+      hour: data.hour,
+      minute: data.minute,
+      second: data.second,
+      microsecond: data.microsecond,
+      zone_abbr: data.zone_abbr,
+      time_zone: data.time_zone,
+      utc_offset: data.utc_offset,
+      std_offset: data.std_offset
+    }
 end

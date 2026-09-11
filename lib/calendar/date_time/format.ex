@@ -1,6 +1,8 @@
 defmodule Calendar.DateTime.Format do
   alias Calendar.Strftime
-  @secs_between_year_0_and_unix_epoch 719528*24*3600 # From erlang calendar docs: there are 719528 days between Jan 1, 0 and Jan 1, 1970. Does not include leap seconds
+
+  # From erlang calendar docs: there are 719528 days between Jan 1, 0 and Jan 1, 1970. Does not include leap seconds
+  @secs_between_year_0_and_unix_epoch 719_528 * 24 * 3600
 
   @doc """
   Format a DateTime as an RFC 2822 timestamp.
@@ -66,9 +68,12 @@ defmodule Calendar.DateTime.Format do
   """
   def iso8601_basic(dt) do
     dt = dt |> contained_date_time
-    offset_part = rfc3339_offset_part(dt, dt.time_zone)
-    |> String.replace(":", "")
-    Strftime.strftime!(dt, "%Y%m%dT%H%M%S")<>offset_part
+
+    offset_part =
+      rfc3339_offset_part(dt, dt.time_zone)
+      |> String.replace(":", "")
+
+    Strftime.strftime!(dt, "%Y%m%dT%H%M%S") <> offset_part
   end
 
   @doc """
@@ -87,49 +92,85 @@ defmodule Calendar.DateTime.Format do
       iex> Calendar.DateTime.from_erl!({{2014, 9, 26}, {17, 10, 20, 5}}, "America/Montevideo") |> Calendar.DateTime.Format.rfc3339
       "2014-09-26T17:10:20.000005-03:00"
   """
-  def rfc3339(%DateTime{time_zone: time_zone, year: year, month: month, day: day, hour: hour, minute: minute, second: second, microsecond: microsecond} = dt) do
-    [pad(year, 4), "-", pad(month), "-", pad(day), "T", pad(hour), ":", pad(minute), ":", pad(second),
+  def rfc3339(
+        %DateTime{
+          time_zone: time_zone,
+          year: year,
+          month: month,
+          day: day,
+          hour: hour,
+          minute: minute,
+          second: second,
+          microsecond: microsecond
+        } = dt
+      ) do
+    [
+      pad(year, 4),
+      "-",
+      pad(month),
+      "-",
+      pad(day),
+      "T",
+      pad(hour),
+      ":",
+      pad(minute),
+      ":",
+      pad(second),
       rfc3330_microsecond_part(microsecond, nil),
-      rfc3339_offset_part(dt, time_zone)]
-    |> IO.iodata_to_binary
+      rfc3339_offset_part(dt, time_zone)
+    ]
+    |> IO.iodata_to_binary()
   end
+
   def rfc3339(dt), do: dt |> contained_date_time |> rfc3339
 
-  defp rfc3339_offset_part(_, time_zone) when time_zone == "UTC" or time_zone == "Etc/UTC", do: "Z"
+  defp rfc3339_offset_part(_, time_zone) when time_zone == "UTC" or time_zone == "Etc/UTC",
+    do: "Z"
+
   defp rfc3339_offset_part(dt, _) do
     Strftime.strftime!(dt, "%z")
     total_off = dt.utc_offset + dt.std_offset
     sign = sign_for_offset(total_off)
     offset_amount_string = total_off |> secs_to_hours_mins_string
-    sign<>offset_amount_string
+    sign <> offset_amount_string
   end
+
   defp sign_for_offset(offset) when offset < 0, do: "-"
   defp sign_for_offset(_), do: "+"
+
   defp secs_to_hours_mins_string(secs) do
     secs = abs(secs)
-    hours = secs/3600.0 |> Float.floor |> trunc
-    mins = rem(secs, 3600)/60.0 |> Float.floor |> trunc
+    hours = (secs / 3600.0) |> Float.floor() |> trunc
+    mins = (rem(secs, 3600) / 60.0) |> Float.floor() |> trunc
     "#{pad(hours, 2)}:#{pad(mins, 2)}"
   end
 
   defp rfc3330_microsecond_part(_, 0), do: ""
-  defp rfc3330_microsecond_part({microsecond, precision}, nil), do: rfc3330_microsecond_part({microsecond, precision}, precision)
+
+  defp rfc3330_microsecond_part({microsecond, precision}, nil),
+    do: rfc3330_microsecond_part({microsecond, precision}, precision)
+
   defp rfc3330_microsecond_part({microsecond, _}, 6) do
     "." <> pad(microsecond, 6)
   end
-  defp rfc3330_microsecond_part({microsecond, _inherent_precision}, precision) when precision >= 1 and precision <=6 do
+
+  defp rfc3330_microsecond_part({microsecond, _inherent_precision}, precision)
+       when precision >= 1 and precision <= 6 do
     ".#{microsecond |> pad(6)}" |> String.slice(0..precision)
   end
 
   defp pad(subject, len \\ 2, char \\ "0")
+
   defp pad(subject, 2, _char) when is_integer(subject) and subject >= 10 and subject <= 99 do
     Integer.to_string(subject)
   end
+
   defp pad(subject, len, char) when is_integer(subject) do
     subject
-    |> Integer.to_string
+    |> Integer.to_string()
     |> pad(len, char)
   end
+
   defp pad(subject, len, char) when is_binary(subject) do
     String.pad_leading(subject, len, char)
   end
@@ -166,11 +207,12 @@ defmodule Calendar.DateTime.Format do
       iex> Calendar.DateTime.from_erl!({{2014, 9, 26}, {17, 10, 20}}, "America/Montevideo",{5, 6}) |> Calendar.DateTime.Format.rfc3339(0)
       "2014-09-26T17:10:20-03:00"
   """
-  def rfc3339(%DateTime{} = dt, decimal_count) when decimal_count >= 0 and decimal_count <=6 do
-    Strftime.strftime!(dt, "%Y-%m-%dT%H:%M:%S")<>
-    rfc3330_microsecond_part(dt.microsecond, decimal_count)<>
-    rfc3339_offset_part(dt, dt.time_zone)
+  def rfc3339(%DateTime{} = dt, decimal_count) when decimal_count >= 0 and decimal_count <= 6 do
+    Strftime.strftime!(dt, "%Y-%m-%dT%H:%M:%S") <>
+      rfc3330_microsecond_part(dt.microsecond, decimal_count) <>
+      rfc3339_offset_part(dt, dt.time_zone)
   end
+
   def rfc3339(dt, decimal_count) do
     dt
     |> contained_date_time
@@ -191,6 +233,7 @@ defmodule Calendar.DateTime.Format do
   def httpdate(%DateTime{time_zone: "Etc/UTC"} = dt) do
     Strftime.strftime!(dt, "%a, %d %b %Y %H:%M:%S GMT")
   end
+
   def httpdate(dt) do
     dt
     |> contained_date_time
@@ -208,9 +251,10 @@ defmodule Calendar.DateTime.Format do
   """
   def unix(%DateTime{time_zone: "Etc/UTC"} = dt) do
     dt
-    |> Calendar.DateTime.gregorian_seconds
+    |> Calendar.DateTime.gregorian_seconds()
     |> Kernel.-(@secs_between_year_0_and_unix_epoch)
   end
+
   def unix(dt) do
     dt
     |> contained_date_time
@@ -235,12 +279,15 @@ defmodule Calendar.DateTime.Format do
     |> unix
     |> Kernel.+(0.0)
   end
+
   def unix_micro(%DateTime{} = date_time) do
     {microsecond, _} = date_time.microsecond
+
     date_time
     |> unix
-    |> Kernel.+(microsecond/1_000_000)
+    |> Kernel.+(microsecond / 1_000_000)
   end
+
   def unix_micro(date_time) do
     date_time |> contained_date_time |> unix_micro
   end

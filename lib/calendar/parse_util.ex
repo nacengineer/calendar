@@ -3,9 +3,10 @@ defmodule Calendar.ParseUtil do
 
   def month_number_for_month_name(string) do
     string
-    |> String.downcase
+    |> String.downcase()
     |> cap_month_number_for_month_name
   end
+
   defp cap_month_number_for_month_name("jan"), do: 1
   defp cap_month_number_for_month_name("feb"), do: 2
   defp cap_month_number_for_month_name("mar"), do: 3
@@ -37,29 +38,32 @@ defmodule Calendar.ParseUtil do
   def hours_mins_to_secs!(hours, mins) do
     hours_int = hours |> to_int
     mins_int = mins |> to_int
-    hours_int*3600+mins_int*60
+    hours_int * 3600 + mins_int * 60
   end
 
   def two_to_four_digit_year(year, year_guessing_base) when year < 100 do
     closest_year(year, year_guessing_base)
   end
+
   def two_to_four_digit_year(year, _), do: year
 
   defp closest_year(two_digit_year, year_guessing_base) do
     two_digit_year
     |> possible_years(year_guessing_base)
-    |> Enum.map(fn year -> {year, abs(year_guessing_base-year)} end)
+    |> Enum.map(fn year -> {year, abs(year_guessing_base - year)} end)
     |> Enum.min_by(fn {_year, diff} -> diff end)
     |> elem(0)
   end
+
   defp possible_years(two_digit_year, year_guessing_base) do
     centuries_for_guessing_base(year_guessing_base)
-    |> Enum.map(&(&1+two_digit_year))
+    |> Enum.map(&(&1 + two_digit_year))
   end
+
   # The three centuries closest to the guessing base
   # if you provide e.g. 2015 it should return [1900, 2000, 2100]
   defp centuries_for_guessing_base(year_guessing_base) do
-    base_century = year_guessing_base-rem(year_guessing_base, 100)
-    [base_century-100, base_century, base_century+100]
+    base_century = year_guessing_base - rem(year_guessing_base, 100)
+    [base_century - 100, base_century, base_century + 100]
   end
 end

@@ -1,7 +1,7 @@
 defmodule Calendar.NaiveDateTime.Interval do
-@moduledoc """
-A `NaiveDateTime.Interval` consists of a start and an end `NaiveDateTime`.
-"""
+  @moduledoc """
+  A `NaiveDateTime.Interval` consists of a start and an end `NaiveDateTime`.
+  """
   @type t :: %__MODULE__{from: %NaiveDateTime{}, to: %NaiveDateTime{}}
   defstruct [:from, :to]
 
@@ -18,8 +18,8 @@ A `NaiveDateTime.Interval` consists of a start and an end `NaiveDateTime`.
       "2016-02-27T10:00:00/2016-03-01T11:00:00"
   """
   def iso8601(interval) do
-    from_string = interval.from |> Calendar.NaiveDateTime.Format.iso8601
-    to_string   = interval.to   |> Calendar.NaiveDateTime.Format.iso8601
+    from_string = interval.from |> Calendar.NaiveDateTime.Format.iso8601()
+    to_string = interval.to |> Calendar.NaiveDateTime.Format.iso8601()
     from_string <> "/" <> to_string
   end
 
@@ -35,8 +35,8 @@ A `NaiveDateTime.Interval` consists of a start and an end `NaiveDateTime`.
       "20160227T100000/20160301T110000"
   """
   def iso8601_basic(interval) do
-    from_string = interval.from |> Calendar.NaiveDateTime.Format.iso8601_basic
-    to_string   = interval.to   |> Calendar.NaiveDateTime.Format.iso8601_basic
+    from_string = interval.from |> Calendar.NaiveDateTime.Format.iso8601_basic()
+    to_string = interval.to |> Calendar.NaiveDateTime.Format.iso8601_basic()
     from_string <> "/" <> to_string
   end
 end
