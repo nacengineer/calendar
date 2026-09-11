@@ -198,7 +198,7 @@ defmodule Calendar.DateTime.Parse do
       %DateTime{zone_abbr: "UTC", day: 16, hour: 15, microsecond: {0, 3}, minute: 53, month: 2, second: 20, std_offset: 0, time_zone: "Etc/UTC", utc_offset: 0, year: 2015}
   """
   def js_ms!(millisec) when is_integer(millisec) do
-    result = (millisec / 1000.0) |> unix!()
+    %DateTime{} = result = (millisec / 1000.0) |> unix!()
     # change usec precision to 3
     %DateTime{result | microsecond: {elem(result.microsecond, 0), 3}}
   end

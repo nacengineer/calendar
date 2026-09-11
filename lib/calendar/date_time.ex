@@ -97,11 +97,9 @@ defmodule Calendar.DateTime do
   # correct the second back to 60. This is to avoid problems with the erlang
   # gregorian second system (lack of) handling of leap seconds.
   def shift_zone!(%DateTime{second: 60} = date_time, timezone) do
-    second_before =
-      %DateTime{date_time | second: 59}
-      |> shift_zone!(timezone)
-
-    %DateTime{second_before | second: 60}
+    %DateTime{date_time | second: 59}
+    |> shift_zone!(timezone)
+    |> then(&%DateTime{(%DateTime{} = &1) | second: 60})
   end
 
   def shift_zone!(date_time, timezone) do
