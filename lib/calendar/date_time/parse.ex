@@ -41,9 +41,9 @@ defmodule Calendar.DateTime.Parse do
   """
   def rfc822_utc(string, year_guessing_base \\ 2015) do
     string
-    |> capture_rfc822_string
+    |> capture_rfc822_string()
     |> change_captured_year_to_four_digit(year_guessing_base)
-    |> rfc2822_utc_from_captured
+    |> rfc2822_utc_from_captured()
   end
 
   defp capture_rfc822_string(string) do
@@ -55,7 +55,7 @@ defmodule Calendar.DateTime.Parse do
     changed_year =
       to_int(cap["year"])
       |> two_to_four_digit_year(year_guessing_base)
-      |> to_string
+      |> to_string()
 
     %{cap | "year" => changed_year}
   end
@@ -85,8 +85,8 @@ defmodule Calendar.DateTime.Parse do
   """
   def rfc2822_utc(string) do
     string
-    |> capture_rfc2822_string
-    |> rfc2822_utc_from_captured
+    |> capture_rfc2822_string()
+    |> rfc2822_utc_from_captured()
   end
 
   defp rfc2822_utc_from_captured(cap) do
@@ -102,8 +102,8 @@ defmodule Calendar.DateTime.Parse do
 
     {:ok, result} =
       Calendar.DateTime.from_erl(
-        {{cap["year"] |> to_int, month_num, cap["day"] |> to_int},
-         {cap["hour"] |> to_int, cap["min"] |> to_int, cap["sec"] |> to_int}},
+        {{cap["year"] |> to_int(), month_num, cap["day"] |> to_int()},
+         {cap["hour"] |> to_int(), cap["min"] |> to_int(), cap["sec"] |> to_int()}},
         "Etc/UTC"
       )
 
@@ -198,7 +198,7 @@ defmodule Calendar.DateTime.Parse do
       %DateTime{zone_abbr: "UTC", day: 16, hour: 15, microsecond: {0, 3}, minute: 53, month: 2, second: 20, std_offset: 0, time_zone: "Etc/UTC", utc_offset: 0, year: 2015}
   """
   def js_ms!(millisec) when is_integer(millisec) do
-    result = (millisec / 1000.0) |> unix!
+    result = (millisec / 1000.0) |> unix!()
     # change usec precision to 3
     %DateTime{result | microsecond: {elem(result.microsecond, 0), 3}}
   end
@@ -226,7 +226,7 @@ defmodule Calendar.DateTime.Parse do
   def httpdate(rfc2616_string) do
     ~r/(?<weekday>[^\s]{3}),\s(?<day>[\d]{2})\s(?<month>[^\s]{3})[\s](?<year>[\d]{4})[^\d](?<hour>[\d]{2})[^\d](?<min>[\d]{2})[^\d](?<sec>[\d]{2})\sGMT/
     |> Regex.named_captures(rfc2616_string)
-    |> httpdate_parsed
+    |> httpdate_parsed()
   end
 
   defp httpdate_parsed(nil), do: {:bad_format, nil}
@@ -234,9 +234,9 @@ defmodule Calendar.DateTime.Parse do
   defp httpdate_parsed(mapped) do
     Calendar.DateTime.from_erl(
       {
-        {mapped["year"] |> to_int, mapped["month"] |> month_number_for_month_name,
-         mapped["day"] |> to_int},
-        {mapped["hour"] |> to_int, mapped["min"] |> to_int, mapped["sec"] |> to_int}
+        {mapped["year"] |> to_int(), mapped["month"] |> month_number_for_month_name(),
+         mapped["day"] |> to_int()},
+        {mapped["hour"] |> to_int(), mapped["min"] |> to_int(), mapped["sec"] |> to_int()}
       },
       "Etc/UTC"
     )
@@ -291,15 +291,15 @@ defmodule Calendar.DateTime.Parse do
           min::2-bytes, ?:, sec::2-bytes, ?Z>>
       ) do
     # faster version for certain formats of of RFC3339
-    {{year |> to_int, month |> to_int, day |> to_int},
-     {hour |> to_int, min |> to_int, sec |> to_int}}
+    {{year |> to_int(), month |> to_int(), day |> to_int()},
+     {hour |> to_int(), min |> to_int(), sec |> to_int()}}
     |> Calendar.DateTime.from_erl("Etc/UTC")
   end
 
   def rfc3339_utc(rfc3339_string) do
     parsed =
       rfc3339_string
-      |> parse_rfc3339_string
+      |> parse_rfc3339_string()
 
     if parsed do
       parse_rfc3339_as_utc_parsed_string(
@@ -436,8 +436,8 @@ defmodule Calendar.DateTime.Parse do
         <<year::4-bytes, month::2-bytes, day::2-bytes, ?T, hour::2-bytes, min::2-bytes,
           sec::2-bytes, ?Z>>
       ) do
-    {{year |> to_int, month |> to_int, day |> to_int},
-     {hour |> to_int, min |> to_int, sec |> to_int}}
+    {{year |> to_int(), month |> to_int(), day |> to_int()},
+     {hour |> to_int(), min |> to_int(), sec |> to_int()}}
     |> Calendar.DateTime.from_erl("Etc/UTC")
   end
 
@@ -493,7 +493,7 @@ defmodule Calendar.DateTime.Parse do
         offset_difference =
           (dt_before.utc_offset + dt_before.std_offset -
              (dt_after.utc_offset + dt_after.std_offset))
-          |> abs
+          |> abs()
 
         naive_datetime
         |> NaiveDateTime.add(offset_difference)
@@ -534,8 +534,8 @@ defmodule Calendar.DateTime.Parse do
   end
 
   defp erl_date_time_from_strings({{year, month, date}, {hour, min, sec}}) do
-    {{year |> to_int, month |> to_int, date |> to_int},
-     {hour |> to_int, min |> to_int, sec |> to_int}}
+    {{year |> to_int(), month |> to_int(), date |> to_int()},
+     {hour |> to_int(), min |> to_int(), sec |> to_int()}}
   end
 
   defp parse_rfc3339_string(rfc3339_string) do

@@ -11,7 +11,7 @@ defmodule Calendar.Time.Format do
   """
   def iso8601(time) do
     time
-    |> contained_time
+    |> contained_time()
     |> Strftime.strftime!("%H:%M:%S")
   end
 
@@ -25,7 +25,7 @@ defmodule Calendar.Time.Format do
 
   """
   def iso_8601_basic(time) do
-    time = time |> contained_time
+    time = time |> contained_time()
     Strftime.strftime!(time, "%H%M%S")
   end
 

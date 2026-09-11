@@ -24,7 +24,7 @@ defmodule Calendar.Strftime do
   """
   def strftime!(dt, string, lang \\ :en) do
     string
-    |> parse_for_con_specs
+    |> parse_for_con_specs()
     |> Enum.reduce(string, fn conv_spec, new_string ->
       String.replace(new_string, "%#{conv_spec}", string_for_conv_spec(dt, conv_spec, lang))
     end)
@@ -168,7 +168,7 @@ defmodule Calendar.Strftime do
   end
 
   defp string_for_conv_spec(dt, :V, _) do
-    "#{elem(iso_week_number(dt), 1)}" |> pad
+    "#{elem(iso_week_number(dt), 1)}" |> pad()
   end
 
   defp string_for_conv_spec(dt, :G, _) do
@@ -191,27 +191,27 @@ defmodule Calendar.Strftime do
 
   defp string_for_conv_spec(dt, :C, _) do
     dt = to_date(dt)
-    "#{(dt.year / 100.0) |> trunc}"
+    "#{(dt.year / 100.0) |> trunc()}"
   end
 
   defp string_for_conv_spec(dt, :I, _) do
     dt = to_time(dt)
-    "#{dt.hour |> x24h_to_12_h |> elem(0)}" |> pad
+    "#{dt.hour |> x24h_to_12_h() |> elem(0)}" |> pad()
   end
 
   defp string_for_conv_spec(dt, :l, _) do
     dt = to_time(dt)
-    "#{dt.hour |> x24h_to_12_h |> elem(0)}" |> pad(2, hd(' '))
+    "#{dt.hour |> x24h_to_12_h() |> elem(0)}" |> pad(2, hd(~c" "))
   end
 
   defp string_for_conv_spec(dt, :P, _) do
     dt = to_time(dt)
-    "#{dt.hour |> x24h_to_12_h |> elem(1)}"
+    "#{dt.hour |> x24h_to_12_h() |> elem(1)}"
   end
 
   defp string_for_conv_spec(dt, :p, _) do
     dt = to_time(dt)
-    "#{dt.hour |> x24h_to_12_h |> elem(1)}" |> String.upcase()
+    "#{dt.hour |> x24h_to_12_h() |> elem(1)}" |> String.upcase()
   end
 
   defp string_for_conv_spec(dt, :r, _) do
@@ -236,37 +236,37 @@ defmodule Calendar.Strftime do
 
   defp string_for_conv_spec(dt, :m, _) do
     dt = to_date(dt)
-    "#{dt.month}" |> pad
+    "#{dt.month}" |> pad()
   end
 
   defp string_for_conv_spec(dt, :e, _) do
     dt = to_date(dt)
-    "#{dt.day}" |> pad(2, hd(' '))
+    "#{dt.day}" |> pad(2, hd(~c" "))
   end
 
   defp string_for_conv_spec(dt, :d, _) do
     dt = to_date(dt)
-    "#{dt.day}" |> pad
+    "#{dt.day}" |> pad()
   end
 
   defp string_for_conv_spec(dt, :H, _) do
     dt = to_time(dt)
-    "#{dt.hour}" |> pad
+    "#{dt.hour}" |> pad()
   end
 
   defp string_for_conv_spec(dt, :k, _) do
     dt = to_time(dt)
-    "#{dt.hour}" |> pad(2, hd(' '))
+    "#{dt.hour}" |> pad(2, hd(~c" "))
   end
 
   defp string_for_conv_spec(dt, :M, _) do
     dt = to_time(dt)
-    "#{dt.minute}" |> pad
+    "#{dt.minute}" |> pad()
   end
 
   defp string_for_conv_spec(dt, :S, _) do
     dt = to_time(dt)
-    "#{dt.second}" |> pad
+    "#{dt.second}" |> pad()
   end
 
   defp string_for_conv_spec(dt, :z, _) do
@@ -293,7 +293,7 @@ defmodule Calendar.Strftime do
   defp z_offset_part(dt) do
     total_off = dt.utc_offset + dt.std_offset
     sign = sign_for_offset(total_off)
-    offset_amount_string = total_off |> secs_to_hours_mins_string
+    offset_amount_string = total_off |> secs_to_hours_mins_string()
     sign <> offset_amount_string
   end
 
@@ -302,8 +302,8 @@ defmodule Calendar.Strftime do
 
   defp secs_to_hours_mins_string(secs) do
     secs = abs(secs)
-    hours = (secs / 3600.0) |> Float.floor() |> trunc
-    mins = (rem(secs, 3600) / 60.0) |> Float.floor() |> trunc
+    hours = (secs / 3600.0) |> Float.floor() |> trunc()
+    mins = (rem(secs, 3600) / 60.0) |> Float.floor() |> trunc()
     "#{hours |> pad(2)}#{mins |> pad(2)}"
   end
 
@@ -316,12 +316,12 @@ defmodule Calendar.Strftime do
   end
 
   defp month_abbr(dt, lang) do
-    dt = dt |> to_date
+    dt = dt |> to_date()
     Enum.fetch!(month_names_abbr(lang), dt.month - 1)
   end
 
   defp month(dt, lang) do
-    dt = dt |> to_date
+    dt = dt |> to_date()
     Enum.fetch!(month_names(lang), dt.month - 1)
   end
 
@@ -335,7 +335,7 @@ defmodule Calendar.Strftime do
 
   # sunday is 0
   defp day_of_the_week_zero_sunday(dt) do
-    dt |> day_of_the_week |> rem(7)
+    dt |> day_of_the_week() |> rem(7)
   end
 
   defp x24h_to_12_h(0) do

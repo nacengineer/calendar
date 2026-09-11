@@ -14,7 +14,7 @@ defmodule Calendar.Date do
   Takes a Date struct and returns an erlang style date tuple.
   """
   def to_erl(date) do
-    date = date |> contained_date
+    date = date |> contained_date()
     {date.year, date.month, date.day}
   end
 
@@ -62,8 +62,8 @@ defmodule Calendar.Date do
       29
   """
   def number_of_days_in_month(date) do
-    date = date |> contained_date
-    {year, month, _} = Calendar.ContainsDate.date_struct(date) |> to_erl
+    date = date |> contained_date()
+    {year, month, _} = Calendar.ContainsDate.date_struct(date) |> to_erl()
     :calendar.last_day_of_the_month(year, month)
   end
 
@@ -82,8 +82,8 @@ defmodule Calendar.Date do
   """
   def week_number(date) do
     date
-    |> contained_date
-    |> to_erl
+    |> contained_date()
+    |> to_erl()
     |> :calendar.iso_week_number()
   end
 
@@ -141,7 +141,7 @@ defmodule Calendar.Date do
       false
   """
   def in_week?(date, year, week_num) do
-    date |> week_number == {year, week_num}
+    date |> week_number() == {year, week_num}
   end
 
   @doc """
@@ -151,12 +151,12 @@ defmodule Calendar.Date do
       735959
   """
   def to_gregorian_days(date) do
-    date = date |> contained_date
+    date = date |> contained_date()
     :calendar.date_to_gregorian_days(date.year, date.month, date.day)
   end
 
   defp from_gregorian_days!(days) do
-    :calendar.gregorian_days_to_date(days) |> from_erl!
+    :calendar.gregorian_days_to_date(days) |> from_erl!()
   end
 
   @doc """
@@ -260,11 +260,11 @@ defmodule Calendar.Date do
       {:ok, %Date{day: 25, month: 12, year: 2014} }
   """
   def advance(date, days) when is_integer(days) do
-    date = date |> contained_date
+    date = date |> contained_date()
 
     result =
       (to_gregorian_days(date) + days)
-      |> from_gregorian_days!
+      |> from_gregorian_days!()
 
     {:ok, result}
   end
@@ -305,7 +305,7 @@ defmodule Calendar.Date do
       %Date{day: 25, month: 12, year: 2014}
   """
   def advance!(date, days) when is_integer(days) do
-    date = date |> contained_date
+    date = date |> contained_date()
     {:ok, result} = advance(date, days)
     result
   end
@@ -319,8 +319,8 @@ defmodule Calendar.Date do
             %Date{day: 2, month: 1, year: 2015}]
   """
   def days_after(from_date) do
-    from_date = from_date |> contained_date
-    Stream.unfold(next_day!(from_date), fn n -> {n, n |> next_day!} end)
+    from_date = from_date |> contained_date()
+    Stream.unfold(next_day!(from_date), fn n -> {n, n |> next_day!()} end)
   end
 
   @doc """
@@ -331,8 +331,8 @@ defmodule Calendar.Date do
             %Date{day: 24, month: 12, year: 2014}]
   """
   def days_before(from_date) do
-    from_date = from_date |> contained_date
-    Stream.unfold(prev_day!(from_date), fn n -> {n, n |> prev_day!} end)
+    from_date = from_date |> contained_date()
+    Stream.unfold(prev_day!(from_date), fn n -> {n, n |> prev_day!()} end)
   end
 
   @doc """
@@ -348,20 +348,20 @@ defmodule Calendar.Date do
   def days_after_until(from_date, until_date, include_from_date \\ false)
 
   def days_after_until(from_date, until_date, _include_from_date = false) do
-    from_date = from_date |> contained_date
-    until_date = until_date |> contained_date
+    from_date = from_date |> contained_date()
+    until_date = until_date |> contained_date()
 
     Stream.unfold(next_day!(from_date), fn n ->
       if n == next_day!(until_date) do
         nil
       else
-        {n, n |> next_day!}
+        {n, n |> next_day!()}
       end
     end)
   end
 
   def days_after_until(from_date, until_date, _include_from_date = true) do
-    before_from_date = from_date |> contained_date |> prev_day!
+    before_from_date = from_date |> contained_date() |> prev_day!()
     days_after_until(before_from_date, until_date)
   end
 
@@ -381,22 +381,22 @@ defmodule Calendar.Date do
   def days_before_until(from_date, until_date, include_from_date \\ false)
 
   def days_before_until(from_date, until_date, _include_from_date = false) do
-    from_date = from_date |> contained_date
-    until_date = until_date |> contained_date
+    from_date = from_date |> contained_date()
+    until_date = until_date |> contained_date()
 
     Stream.unfold(prev_day!(from_date), fn n ->
       if n == prev_day!(until_date) do
         nil
       else
-        {n, n |> prev_day!}
+        {n, n |> prev_day!()}
       end
     end)
   end
 
   def days_before_until(from_date, until_date, _include_from_date = true) do
     from_date
-    |> contained_date
-    |> next_day!
+    |> contained_date()
+    |> next_day!()
     |> days_before_until(until_date)
   end
 
@@ -418,8 +418,8 @@ defmodule Calendar.Date do
   """
   def day_of_week(date) do
     date
-    |> contained_date
-    |> to_erl
+    |> contained_date()
+    |> to_erl()
     |> :calendar.day_of_the_week()
   end
 
@@ -438,7 +438,7 @@ defmodule Calendar.Date do
   """
   def day_of_week_name(date, lang \\ :en) do
     date
-    |> contained_date
+    |> contained_date()
     |> Calendar.Strftime.strftime!("%A", lang)
   end
 
@@ -457,7 +457,7 @@ defmodule Calendar.Date do
       2
   """
   def day_of_week_zb(date) do
-    num = date |> day_of_week
+    num = date |> day_of_week()
 
     case num do
       7 -> 0
@@ -482,7 +482,7 @@ defmodule Calendar.Date do
       366
   """
   def day_number_in_year(date) do
-    date = date |> contained_date
+    date = date |> contained_date()
 
     day_count_previous_months =
       Enum.map(
@@ -643,7 +643,7 @@ defmodule Calendar.Date do
   """
   def to_s(date) do
     date
-    |> contained_date
+    |> contained_date()
     |> Calendar.Strftime.strftime!("%Y-%m-%d")
   end
 

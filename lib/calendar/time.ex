@@ -25,7 +25,7 @@ defmodule Calendar.Time do
     {hour, minute, second}
   end
 
-  def to_erl(t), do: t |> contained_time |> to_erl
+  def to_erl(t), do: t |> contained_time() |> to_erl()
 
   @doc """
   Takes a Time struct and returns an Ecto style time four-tuple with microseconds.
@@ -46,7 +46,7 @@ defmodule Calendar.Time do
     {hour, min, sec, usec}
   end
 
-  def to_micro_erl(t), do: t |> contained_time |> to_micro_erl
+  def to_micro_erl(t), do: t |> contained_time() |> to_micro_erl()
 
   @doc """
   Create a Time struct using an erlang style tuple and optionally a microsecond second.
@@ -122,7 +122,7 @@ defmodule Calendar.Time do
       {12, 10, 23, {888888, 6}, :am}
   """
   def twelve_hour_time(time) do
-    time = time |> contained_time
+    time = time |> contained_time()
     {h12, ampm} = x24h_to_12_h(time.hour)
     {h12, time.minute, time.second, time.microsecond, ampm}
   end
@@ -140,8 +140,8 @@ defmodule Calendar.Time do
   """
   def second_in_day(time) do
     time
-    |> contained_time
-    |> to_erl
+    |> contained_time()
+    |> to_erl()
     |> :calendar.time_to_seconds()
   end
 
@@ -186,7 +186,7 @@ defmodule Calendar.Time do
       iex> {23, 59, 59, 300000} |> next_second
       %Time{hour: 0, minute: 0, second: 0, microsecond: {300000, 6}}
   """
-  def next_second(time), do: time |> contained_time |> do_next_second
+  def next_second(time), do: time |> contained_time() |> do_next_second()
 
   defp do_next_second(%Time{hour: 23, minute: 59, second: second, microsecond: microsecond})
        when second >= 59 do
@@ -195,9 +195,9 @@ defmodule Calendar.Time do
 
   defp do_next_second(time) do
     time
-    |> second_in_day
+    |> second_in_day()
     |> Kernel.+(1)
-    |> from_second_in_day
+    |> from_second_in_day()
     |> add_usec_to_time(time.microsecond)
   end
 
@@ -224,7 +224,7 @@ defmodule Calendar.Time do
       iex> {0, 0, 0, 200_000} |> prev_second
       %Time{hour: 23, minute: 59, second: 59, microsecond: {200_000, 6}}
   """
-  def prev_second(time), do: time |> contained_time |> do_prev_second
+  def prev_second(time), do: time |> contained_time() |> do_prev_second()
 
   defp do_prev_second(%Time{hour: 0, minute: 0, second: 0, microsecond: microsecond}) do
     %Time{hour: 23, minute: 59, second: 59, microsecond: microsecond}
@@ -232,9 +232,9 @@ defmodule Calendar.Time do
 
   defp do_prev_second(time) do
     time
-    |> second_in_day
+    |> second_in_day()
     |> Kernel.-(1)
-    |> from_second_in_day
+    |> from_second_in_day()
     |> add_usec_to_time(time.microsecond)
   end
 

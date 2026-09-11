@@ -15,7 +15,7 @@ defmodule Calendar.DateTime.Format do
   """
   def rfc2822(dt) do
     dt
-    |> contained_date_time
+    |> contained_date_time()
     |> Strftime.strftime!("%a, %d %b %Y %T %z")
   end
 
@@ -32,7 +32,7 @@ defmodule Calendar.DateTime.Format do
   """
   def rfc822(dt) do
     dt
-    |> contained_date_time
+    |> contained_date_time()
     |> Strftime.strftime!("%a, %d %b %y %T %z")
   end
 
@@ -47,7 +47,7 @@ defmodule Calendar.DateTime.Format do
   """
   def rfc850(dt) do
     dt
-    |> contained_date_time
+    |> contained_date_time()
     |> Strftime.strftime!("%a, %d-%b-%y %T %Z")
   end
 
@@ -67,7 +67,7 @@ defmodule Calendar.DateTime.Format do
       "20140926T171020-0300"
   """
   def iso8601_basic(dt) do
-    dt = dt |> contained_date_time
+    dt = dt |> contained_date_time()
 
     offset_part =
       rfc3339_offset_part(dt, dt.time_zone)
@@ -122,7 +122,7 @@ defmodule Calendar.DateTime.Format do
     |> IO.iodata_to_binary()
   end
 
-  def rfc3339(dt), do: dt |> contained_date_time |> rfc3339
+  def rfc3339(dt), do: dt |> contained_date_time() |> rfc3339()
 
   defp rfc3339_offset_part(_, time_zone) when time_zone == "UTC" or time_zone == "Etc/UTC",
     do: "Z"
@@ -131,7 +131,7 @@ defmodule Calendar.DateTime.Format do
     Strftime.strftime!(dt, "%z")
     total_off = dt.utc_offset + dt.std_offset
     sign = sign_for_offset(total_off)
-    offset_amount_string = total_off |> secs_to_hours_mins_string
+    offset_amount_string = total_off |> secs_to_hours_mins_string()
     sign <> offset_amount_string
   end
 
@@ -140,8 +140,8 @@ defmodule Calendar.DateTime.Format do
 
   defp secs_to_hours_mins_string(secs) do
     secs = abs(secs)
-    hours = (secs / 3600.0) |> Float.floor() |> trunc
-    mins = (rem(secs, 3600) / 60.0) |> Float.floor() |> trunc
+    hours = (secs / 3600.0) |> Float.floor() |> trunc()
+    mins = (rem(secs, 3600) / 60.0) |> Float.floor() |> trunc()
     "#{pad(hours, 2)}:#{pad(mins, 2)}"
   end
 
@@ -215,7 +215,7 @@ defmodule Calendar.DateTime.Format do
 
   def rfc3339(dt, decimal_count) do
     dt
-    |> contained_date_time
+    |> contained_date_time()
     |> rfc3339(decimal_count)
   end
 
@@ -236,9 +236,9 @@ defmodule Calendar.DateTime.Format do
 
   def httpdate(dt) do
     dt
-    |> contained_date_time
+    |> contained_date_time()
     |> Calendar.DateTime.shift_zone!("Etc/UTC")
-    |> httpdate
+    |> httpdate()
   end
 
   @doc """
@@ -257,9 +257,9 @@ defmodule Calendar.DateTime.Format do
 
   def unix(dt) do
     dt
-    |> contained_date_time
+    |> contained_date_time()
     |> Calendar.DateTime.shift_zone!("Etc/UTC")
-    |> unix
+    |> unix()
   end
 
   @doc """
@@ -276,7 +276,7 @@ defmodule Calendar.DateTime.Format do
   """
   def unix_micro(%DateTime{microsecond: {microsecond, _}} = date_time) when microsecond == 0 do
     date_time
-    |> unix
+    |> unix()
     |> Kernel.+(0.0)
   end
 
@@ -284,12 +284,12 @@ defmodule Calendar.DateTime.Format do
     {microsecond, _} = date_time.microsecond
 
     date_time
-    |> unix
+    |> unix()
     |> Kernel.+(microsecond / 1_000_000)
   end
 
   def unix_micro(date_time) do
-    date_time |> contained_date_time |> unix_micro
+    date_time |> contained_date_time() |> unix_micro()
   end
 
   @doc """
@@ -308,7 +308,7 @@ defmodule Calendar.DateTime.Format do
   """
   def js_ms(date_time) do
     date_time
-    |> contained_date_time
+    |> contained_date_time()
     |> DateTime.to_unix(:millisecond)
   end
 

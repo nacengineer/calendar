@@ -4,7 +4,7 @@ defmodule Calendar.ParseUtil do
   def month_number_for_month_name(string) do
     string
     |> String.downcase()
-    |> cap_month_number_for_month_name
+    |> cap_month_number_for_month_name()
   end
 
   defp cap_month_number_for_month_name("jan"), do: 1
@@ -36,8 +36,8 @@ defmodule Calendar.ParseUtil do
 
   # Takes strings of hours and mins and return secs
   def hours_mins_to_secs!(hours, mins) do
-    hours_int = hours |> to_int
-    mins_int = mins |> to_int
+    hours_int = hours |> to_int()
+    mins_int = mins |> to_int()
     hours_int * 3600 + mins_int * 60
   end
 

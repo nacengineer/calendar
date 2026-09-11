@@ -18,7 +18,7 @@ defmodule Calendar.Time.Parse do
       {:error, :invalid_time}
   """
   def iso8601(string) do
-    captured = string |> capture_iso8601_string
+    captured = string |> capture_iso8601_string()
 
     if captured do
       Calendar.Time.from_erl(erl_time_from_regex_map(captured))
@@ -54,6 +54,6 @@ defmodule Calendar.Time.Parse do
   end
 
   defp erl_date_time_from_strings({hour, min, sec}) do
-    {hour |> to_int, min |> to_int, sec |> to_int}
+    {hour |> to_int(), min |> to_int(), sec |> to_int()}
   end
 end

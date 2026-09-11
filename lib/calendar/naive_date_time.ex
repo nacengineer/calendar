@@ -100,7 +100,7 @@ defmodule Calendar.NaiveDateTime do
   end
 
   def to_erl(ndt) do
-    ndt |> contained_ndt |> to_erl
+    ndt |> contained_ndt() |> to_erl()
   end
 
   @doc """
@@ -143,7 +143,7 @@ defmodule Calendar.NaiveDateTime do
   end
 
   def to_micro_erl(ndt) do
-    ndt |> contained_ndt |> to_micro_erl
+    ndt |> contained_ndt() |> to_micro_erl()
   end
 
   @doc """
@@ -154,7 +154,7 @@ defmodule Calendar.NaiveDateTime do
       %Date{day: 15, month: 10, year: 2014}
   """
   def to_date(ndt) do
-    ndt = ndt |> contained_ndt
+    ndt = ndt |> contained_ndt()
     %Date{year: ndt.year, month: ndt.month, day: ndt.day}
   end
 
@@ -166,7 +166,7 @@ defmodule Calendar.NaiveDateTime do
       %Time{microsecond: {0, 0}, hour: 2, minute: 37, second: 22}
   """
   def to_time(ndt) do
-    ndt = ndt |> contained_ndt
+    ndt = ndt |> contained_ndt()
     %Time{hour: ndt.hour, minute: ndt.minute, second: ndt.second, microsecond: ndt.microsecond}
   end
 
@@ -179,7 +179,7 @@ defmodule Calendar.NaiveDateTime do
       {:ok, %DateTime{zone_abbr: "UTC", day: 15, microsecond: {0, 0}, hour: 2, minute: 37, month: 10, second: 22, std_offset: 0, time_zone: "UTC", utc_offset: 0, year: 2014}}
   """
   def to_date_time(ndt, timezone) do
-    ndt = ndt |> contained_ndt
+    ndt = ndt |> contained_ndt()
     Calendar.DateTime.from_erl(to_erl(ndt), timezone, ndt.microsecond)
   end
 
@@ -193,7 +193,7 @@ defmodule Calendar.NaiveDateTime do
       %DateTime{zone_abbr: "UTC", day: 15, microsecond: {0, 0}, hour: 2, minute: 37, month: 10, second: 22, std_offset: 0, time_zone: "Etc/UTC", utc_offset: 0, year: 2014}
   """
   def to_date_time_utc(ndt) do
-    ndt = ndt |> contained_ndt
+    ndt = ndt |> contained_ndt()
     {:ok, dt} = to_date_time(ndt, "Etc/UTC")
     dt
   end
@@ -245,7 +245,7 @@ defmodule Calendar.NaiveDateTime do
       {:error, nil}
   """
   def with_offset_to_datetime_utc(ndt, total_utc_offset) do
-    ndt = ndt |> contained_ndt
+    ndt = ndt |> contained_ndt()
     {tag, advanced_ndt} = ndt |> advance(total_utc_offset * -1)
 
     case tag do
@@ -295,8 +295,8 @@ defmodule Calendar.NaiveDateTime do
   """
   def advance(ndt, seconds) do
     try do
-      ndt = ndt |> contained_ndt
-      greg_secs = ndt |> gregorian_seconds
+      ndt = ndt |> contained_ndt()
+      greg_secs = ndt |> gregorian_seconds()
 
       advanced =
         (greg_secs + seconds)
@@ -313,7 +313,7 @@ defmodule Calendar.NaiveDateTime do
   Deprecated version of `add!/2`
   """
   def advance!(ndt, seconds) do
-    ndt = ndt |> contained_ndt
+    ndt = ndt |> contained_ndt()
     {:ok, result} = advance(ndt, seconds)
     result
   end
@@ -329,8 +329,8 @@ defmodule Calendar.NaiveDateTime do
   """
   def gregorian_seconds(ndt) do
     ndt
-    |> contained_ndt
-    |> to_erl
+    |> contained_ndt()
+    |> to_erl()
     |> :calendar.datetime_to_gregorian_seconds()
   end
 
@@ -363,8 +363,8 @@ defmodule Calendar.NaiveDateTime do
       {:ok, 0, 0, :same_time}
   """
   def diff(%NaiveDateTime{} = first_dt, %NaiveDateTime{} = second_dt) do
-    first_dt_utc = first_dt |> to_date_time_utc
-    second_dt_utc = second_dt |> to_date_time_utc
+    first_dt_utc = first_dt |> to_date_time_utc()
+    second_dt_utc = second_dt |> to_date_time_utc()
     Calendar.DateTime.diff(first_dt_utc, second_dt_utc)
   end
 

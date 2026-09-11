@@ -17,7 +17,7 @@ defmodule Calendar.Date.Parse do
   """
   def iso8601(string) do
     Calendar.NaiveDateTime.Parse.iso8601(string <> "T00:00:00")
-    |> iso8610result
+    |> iso8610result()
   end
 
   defp iso8610result({:ok, ndt, _}), do: {:ok, ndt |> Calendar.NaiveDateTime.to_date()}
@@ -63,7 +63,7 @@ defmodule Calendar.Date.Parse do
     try do
       string
       |> String.replace("D", "")
-      |> do_iso_week_date
+      |> do_iso_week_date()
     rescue
       _ -> :error
     end

@@ -64,7 +64,7 @@ defmodule Calendar.DateTime do
   @spec now(String.t()) :: {:ok, DateTime.t()} | :error
   def now(timezone) do
     try do
-      {now_utc_secs, microsecond} = now_utc() |> gregorian_seconds_and_microsecond
+      {now_utc_secs, microsecond} = now_utc() |> gregorian_seconds_and_microsecond()
       period_list = TimeZoneData.periods_for_time(timezone, now_utc_secs, :utc)
       period = hd(period_list)
 
@@ -108,8 +108,8 @@ defmodule Calendar.DateTime do
 
   def shift_zone!(date_time, timezone) do
     date_time
-    |> contained_date_time
-    |> shift_to_utc
+    |> contained_date_time()
+    |> shift_to_utc()
     |> shift_from_utc(timezone)
   end
 
@@ -237,13 +237,13 @@ defmodule Calendar.DateTime do
   Deprecated version of `add/2`
   """
   def advance(date_time, seconds) do
-    date_time = date_time |> contained_date_time
+    date_time = date_time |> contained_date_time()
 
     try do
       advanced =
         date_time
         |> shift_zone!("Etc/UTC")
-        |> gregorian_seconds
+        |> gregorian_seconds()
         |> Kernel.+(seconds)
         |> from_gregorian_seconds!("Etc/UTC", "UTC", 0, 0, date_time.microsecond)
         |> shift_zone!(date_time.time_zone)
@@ -326,8 +326,8 @@ defmodule Calendar.DateTime do
       {:ok, 0, 1, :after}
   """
   def diff(%DateTime{microsecond: {0, _}} = first_dt, %DateTime{microsecond: {0, _}} = second_dt) do
-    first_utc = first_dt |> shift_to_utc |> gregorian_seconds
-    second_utc = second_dt |> shift_to_utc |> gregorian_seconds
+    first_utc = first_dt |> shift_to_utc() |> gregorian_seconds()
+    second_utc = second_dt |> shift_to_utc() |> gregorian_seconds()
     sec_diff = first_utc - second_utc
     {:ok, sec_diff, 0, gt_lt_eq(sec_diff, 0)}
   end
@@ -467,7 +467,7 @@ defmodule Calendar.DateTime do
   defp shift_to_utc(%DateTime{time_zone: "Etc/UTC"} = dt), do: dt
 
   defp shift_to_utc(%DateTime{} = date_time) do
-    greg_secs = :calendar.datetime_to_gregorian_seconds(date_time |> to_erl)
+    greg_secs = :calendar.datetime_to_gregorian_seconds(date_time |> to_erl())
     period_list = TimeZoneData.periods_for_time(date_time.time_zone, greg_secs, :wall)
     period = period_by_offset(period_list, date_time.utc_offset, date_time.std_offset)
 
@@ -476,7 +476,7 @@ defmodule Calendar.DateTime do
   end
 
   defp shift_to_utc(date_time) do
-    date_time |> contained_date_time |> shift_to_utc
+    date_time |> contained_date_time() |> shift_to_utc()
   end
 
   # When we have a list of 2 periods, return the one where UTC offset
@@ -494,9 +494,9 @@ defmodule Calendar.DateTime do
   end
 
   defp shift_from_utc(utc_date_time, to_timezone) do
-    greg_secs = :calendar.datetime_to_gregorian_seconds(utc_date_time |> to_erl)
+    greg_secs = :calendar.datetime_to_gregorian_seconds(utc_date_time |> to_erl())
     period_list = TimeZoneData.periods_for_time(to_timezone, greg_secs, :utc)
-    period = period_list |> hd
+    period = period_list |> hd()
 
     (greg_secs + period.utc_off + period.std_off)
     |> from_gregorian_seconds!(
@@ -677,7 +677,7 @@ defmodule Calendar.DateTime do
 
   defp from_erl_periods({{year, month, day}, {hour, min, sec}}, timezone, periods, microsecond)
        when length(periods) == 1 do
-    period = periods |> hd
+    period = periods |> hd()
 
     {:ok,
      %DateTime{
@@ -818,7 +818,7 @@ defmodule Calendar.DateTime do
   end
 
   def to_erl(date_time) do
-    date_time |> contained_date_time |> to_erl
+    date_time |> contained_date_time() |> to_erl()
   end
 
   @doc """
@@ -859,7 +859,7 @@ defmodule Calendar.DateTime do
   end
 
   def to_micro_erl(date_time) do
-    date_time |> contained_date_time |> to_micro_erl
+    date_time |> contained_date_time() |> to_micro_erl()
   end
 
   @doc """
@@ -873,7 +873,7 @@ defmodule Calendar.DateTime do
     %Date{year: dt.year, month: dt.month, day: dt.day}
   end
 
-  def to_date(dt), do: dt |> contained_date_time |> to_date
+  def to_date(dt), do: dt |> contained_date_time() |> to_date()
 
   @doc """
   Takes a DateTime struct and returns a Time struct representing the time part
@@ -886,7 +886,7 @@ defmodule Calendar.DateTime do
     %Time{hour: dt.hour, minute: dt.minute, second: dt.second, microsecond: dt.microsecond}
   end
 
-  def to_time(dt), do: dt |> contained_date_time |> to_time
+  def to_time(dt), do: dt |> contained_date_time() |> to_time()
 
   @doc """
   Returns a tuple with a Date struct and a Time struct.
@@ -898,7 +898,7 @@ defmodule Calendar.DateTime do
     {to_date(dt), to_time(dt)}
   end
 
-  def to_date_and_time(dt), do: dt |> contained_date_time |> to_date_and_time
+  def to_date_and_time(dt), do: dt |> contained_date_time() |> to_date_and_time()
 
   @doc """
   Takes an NaiveDateTime and a time zone identifier and returns a DateTime
@@ -924,7 +924,7 @@ defmodule Calendar.DateTime do
   """
   def to_naive(dt) do
     dt
-    |> to_erl
+    |> to_erl()
     |> Calendar.NaiveDateTime.from_erl!(dt.microsecond)
   end
 
@@ -938,12 +938,12 @@ defmodule Calendar.DateTime do
       63578970620
   """
   def gregorian_seconds(date_time) do
-    date_time = date_time |> contained_date_time
-    :calendar.datetime_to_gregorian_seconds(date_time |> to_erl)
+    date_time = date_time |> contained_date_time()
+    :calendar.datetime_to_gregorian_seconds(date_time |> to_erl())
   end
 
   def gregorian_seconds_and_microsecond(date_time) do
-    date_time = date_time |> contained_date_time
+    date_time = date_time |> contained_date_time()
     microsecond = date_time.microsecond
     {gregorian_seconds(date_time), microsecond}
   end
@@ -1002,7 +1002,7 @@ defmodule Calendar.DateTime do
         {date_utc, {h, m, s}} =
           utc_datetime
           |> shift_zone!("Etc/UTC")
-          |> to_erl
+          |> to_erl()
 
         valid_time_part_of_datetime(date_utc, {h, m, s + 1}, "Etc/UTC")
 

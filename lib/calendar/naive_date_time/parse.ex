@@ -16,7 +16,7 @@ defmodule Calendar.NaiveDateTime.Parse do
       {:ok, %NaiveDateTime{year: 1985, month: 11, day: 6, hour: 21, minute: 6, second: 27, microsecond: {300_000, 1}}, -180000}
   """
   def asn1_generalized(string) do
-    captured = string |> capture_generalized_time_string
+    captured = string |> capture_generalized_time_string()
 
     if captured do
       parse_captured_iso8601(
@@ -49,8 +49,8 @@ defmodule Calendar.NaiveDateTime.Parse do
     month_num = month_number_for_month_name(cap["month"])
 
     Calendar.NaiveDateTime.from_erl(
-      {{cap["year"] |> to_int, month_num, cap["day"] |> to_int},
-       {cap["hour"] |> to_int, cap["min"] |> to_int, cap["sec"] |> to_int}}
+      {{cap["year"] |> to_int(), month_num, cap["day"] |> to_int()},
+       {cap["hour"] |> to_int(), cap["min"] |> to_int(), cap["sec"] |> to_int()}}
     )
   end
 
@@ -172,8 +172,8 @@ defmodule Calendar.NaiveDateTime.Parse do
   end
 
   defp erl_date_time_from_strings({{year, month, date}, {hour, min, sec}}) do
-    {{year |> to_int, month |> to_int, date |> to_int},
-     {hour |> to_int, min |> to_int, sec |> to_int}}
+    {{year |> to_int(), month |> to_int(), date |> to_int()},
+     {hour |> to_int(), min |> to_int(), sec |> to_int()}}
   end
 
   defp parse_fraction(""), do: {0, 0}

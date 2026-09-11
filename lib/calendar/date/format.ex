@@ -11,7 +11,7 @@ defmodule Calendar.Date.Format do
   """
   def iso8601(date) do
     date
-    |> contained_date
+    |> contained_date()
     |> Strftime.strftime!("%Y-%m-%d")
   end
 
@@ -25,7 +25,7 @@ defmodule Calendar.Date.Format do
   """
   def iso8601_basic(date) do
     date
-    |> contained_date
+    |> contained_date()
     |> Strftime.strftime!("%Y%m%d")
   end
 
@@ -39,7 +39,7 @@ defmodule Calendar.Date.Format do
   """
   def ordinal(date) do
     date
-    |> contained_date
+    |> contained_date()
     |> Strftime.strftime!("%Y-%j")
   end
 
@@ -58,7 +58,7 @@ defmodule Calendar.Date.Format do
   """
   def week_number(date) do
     date
-    |> contained_date
+    |> contained_date()
     |> Strftime.strftime!("%Y-W%V")
   end
 
@@ -75,7 +75,7 @@ defmodule Calendar.Date.Format do
   """
   def iso_week_date(date) do
     date
-    |> contained_date
+    |> contained_date()
     |> Strftime.strftime!("%Y-W%V-%u")
   end
 

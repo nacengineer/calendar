@@ -10,7 +10,7 @@ defmodule Calendar.NaiveDateTime.Format do
   """
   def asctime(ndt) do
     ndt
-    |> to_utc_dt
+    |> to_utc_dt()
     |> Strftime.strftime!("%c")
   end
 
@@ -23,7 +23,7 @@ defmodule Calendar.NaiveDateTime.Format do
   """
   def iso8601(ndt) do
     ndt
-    |> to_utc_dt
+    |> to_utc_dt()
     |> Strftime.strftime!("%FT%T")
   end
 
@@ -40,7 +40,7 @@ defmodule Calendar.NaiveDateTime.Format do
   """
   def iso8601_basic(ndt) do
     ndt
-    |> to_utc_dt
+    |> to_utc_dt()
     |> Strftime.strftime!("%FT%T")
     |> String.replace(":", "")
     |> String.replace("-", "")
