@@ -1,14 +1,14 @@
 defmodule Calendar.Mixfile do
   use Mix.Project
 
-  @version "1.0.0"
+  @version "2.0.0"
 
   def project do
     [
       app: :calendar,
       name: "Calendar",
       version: @version,
-      elixir: "~> 1.4",
+      elixir: "~> 1.20",
       consolidate_protocols: false,
       package: package(),
       description: description(),
