@@ -14,8 +14,6 @@ defmodule Calendar.DateTime do
   DateTime structs.
   """
   alias Tzdata, as: TimeZoneData
-  require Calendar.Date
-  require Calendar.Time
 
   @doc """
   Like DateTime.now!("Etc/UTC")

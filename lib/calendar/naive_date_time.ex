@@ -6,8 +6,6 @@ defprotocol Calendar.ContainsNaiveDateTime do
 end
 
 defmodule Calendar.NaiveDateTime do
-  require Calendar.DateTime.Format
-
   @moduledoc """
   NaiveDateTime can represents a "naive time". That is a point in time without
   a specified time zone.
