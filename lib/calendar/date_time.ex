@@ -220,8 +220,12 @@ defmodule Calendar.DateTime do
       year: 2014}
 
       # Go back too far so that year would be before 0
-      iex> from_erl!({{2014,10,2},{0,0,0}}, "America/New_York", {123456, 6}) |> subtract!(999999999999)
-      ** (MatchError) no match of right hand side value: {:error, :function_clause_error}
+      iex> try do
+      ...>   from_erl!({{2014,10,2},{0,0,0}}, "America/New_York", {123456, 6}) |> subtract!(999999999999)
+      ...> rescue
+      ...>   e in MatchError -> e.term
+      ...> end
+      {:error, :function_clause_error}
 
       # Using a negative amount of seconds with the subtract/2 means effectively adding the absolute amount of seconds
       iex> from_erl!({{2014,10,2},{0,0,0}}, "America/New_York", {123456, 6}) |> subtract!(-200)
